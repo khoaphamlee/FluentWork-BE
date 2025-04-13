@@ -1,4 +1,5 @@
 import { Discussion } from 'src/discussions/entities/discussion.entity';
+import { LearningPath } from 'src/learning-paths/entities/learning-path.entity';
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -6,6 +7,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     OneToMany,
+    ManyToOne,
 } from 'typeorm';
   
 @Entity({ name: 'lessons' })
@@ -42,5 +44,8 @@ export class Lesson {
 
     @OneToMany(() => Discussion, discussion => discussion.lesson)
     discussions: Discussion[];
+
+    @ManyToOne(() => LearningPath, learningPath => learningPath.lessons)
+    learningPath: LearningPath;
 }
   

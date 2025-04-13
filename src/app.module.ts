@@ -15,7 +15,17 @@ import { LessonsModule } from './lessons/lessons.module';
 import { FlashcardsModule } from './flashcards/flashcards.module';
 import { DiscussionsModule } from './discussions/discussions.module';
 import { DiscussionRepliesModule } from './discussion-replies/discussion-replies.module';
-
+import { DiscussionReply } from './discussion-replies/entities/discussion-reply.entity';
+import { Discussion } from './discussions/entities/discussion.entity';
+import { ExerciseAttempt } from './exercise-attempts/entities/exercise-attempt.entity';
+import { Flashcard } from './flashcards/entities/flashcard.entity';
+import { LearnerProfile } from './learner-profiles/entities/learner-profile.entity';
+import { LessonProgress } from './lesson-progresses/entities/lesson-progress.entity';
+import { Lesson } from './lessons/entities/lesson.entity';
+import { Question } from './questions/entities/question.entity';
+import { Option } from './options/entities/option.entity';
+import { Test } from './tests/entities/test.entity';
+import { LearningPathsModule } from './learning-paths/learning-paths.module';
 console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
 
 @Module({
@@ -55,7 +65,17 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
           username: dbUsername,
           password: dbPassword,
           database: dbName,
-          entities: [User],
+          entities: [User,
+            LearnerProfile,
+            ExerciseAttempt,
+            Test,
+            Question,
+            Option,
+            LessonProgress,
+            Lesson,
+            Flashcard,
+            Discussion,
+            DiscussionReply],
           synchronize: true, // Cẩn thận khi sử dụng synchronize trong môi trường production
         };
       }
@@ -71,7 +91,8 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     LessonsModule,
     FlashcardsModule,
     DiscussionsModule,
-    DiscussionRepliesModule
+    DiscussionRepliesModule,
+    LearningPathsModule
   ],
   controllers: [AppController],
   providers: [AppService],

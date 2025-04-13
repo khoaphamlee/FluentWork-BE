@@ -18,6 +18,6 @@ export class DiscussionReply {
   @Column('text')
   reply_text: string;
 
-  @Column('datetime')
+  @Column('timestamp')
   created_at: Date;
 }

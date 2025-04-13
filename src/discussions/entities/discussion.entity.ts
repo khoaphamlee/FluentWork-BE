@@ -19,7 +19,7 @@ export class Discussion {
   @Column('text')
   question_text: string;
 
-  @Column('datetime')
+  @Column('timestamp')
   created_at: Date;
 
   @OneToMany(() => DiscussionReply, reply => reply.discussion)

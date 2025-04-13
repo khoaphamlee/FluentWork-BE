@@ -6,4 +6,3 @@ export class CreateLessonProgressDto {
     started_at?: Date;
     completed_at?: Date;
 }
-  

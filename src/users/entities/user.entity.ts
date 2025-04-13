@@ -1,10 +1,13 @@
 import { DiscussionReply } from "src/discussion-replies/entities/discussion-reply.entity";
 import { Discussion } from "src/discussions/entities/discussion.entity";
+import { LearningPath } from "src/learning-paths/entities/learning-path.entity";
 import { 
     Column, 
     CreateDateColumn, 
     Entity, 
+    JoinColumn, 
     OneToMany, 
+    OneToOne, 
     PrimaryGeneratedColumn, 
     UpdateDateColumn 
 } from "typeorm";
@@ -41,4 +44,7 @@ export class User {
 
     @OneToMany(() => DiscussionReply, reply => reply.user)
     replies: DiscussionReply[];
+
+    @OneToOne(() => LearningPath, learningPath => learningPath)
+    learningPath: LearningPath;
 }
