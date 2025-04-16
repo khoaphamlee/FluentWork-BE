@@ -5,18 +5,24 @@ import {
     JoinColumn,
     OneToOne,
     PrimaryColumn,
+    PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
   } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
   
 @Entity({ name: 'learner_profiles' })
+@Unique(['user_id'])
 export class LearnerProfile {
-    @PrimaryColumn()
-    user_id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
   
     @OneToOne(() => User)
     @JoinColumn({ name: 'user_id' })
     user: User;
+
+    @Column()
+    user_id: number;
   
     @Column({
       type: 'enum',

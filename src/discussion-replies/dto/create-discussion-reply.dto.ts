@@ -1,6 +1,15 @@
+import { IsInt, IsString, IsDateString } from 'class-validator';
+
 export class CreateDiscussionReplyDto {
-    discussion_id: number;
-    user_id: number;
-    reply_text: string;
-  }
-  
+  @IsInt()
+  discussion_id: number;
+
+  @IsInt()
+  user_id: number;
+
+  @IsString()
+  reply_text: string;
+
+  @IsDateString() 
+  created_at?: Date;
+}

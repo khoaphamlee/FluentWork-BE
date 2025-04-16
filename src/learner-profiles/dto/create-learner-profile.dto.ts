@@ -1,7 +1,23 @@
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsDateString,
+  Min,
+} from 'class-validator';
+
 export class CreateLearnerProfileDto {
-    user_id: number;
-    proficiency_level: 'Beginner' | 'Intermediate' | 'Advanced';
-    total_lessons_completed: number;
-    last_activity_date?: Date;
-  }
-  
+  @IsInt()
+  user_id: number;
+
+  @IsEnum(['Beginner', 'Intermediate', 'Advanced'])
+  proficiency_level: 'Beginner' | 'Intermediate' | 'Advanced';
+
+  @IsInt()
+  @Min(0)
+  total_lessons_completed: number;
+
+  @IsOptional()
+  @IsDateString()
+  last_activity_date?: Date;
+}

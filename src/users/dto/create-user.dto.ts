@@ -1,7 +1,16 @@
+import { IsEmail, IsEnum, IsNotEmpty, MinLength } from 'class-validator';
+
 export class CreateUserDto {
-    username: string;
-    email: string;
-    password_hash: string;
-    role: 'Admin' | 'Learner' | 'Instructor';
-  }
-  
+  @IsNotEmpty()
+  username: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @MinLength(6)
+  password_hash: string;
+
+  @IsEnum(['Admin', 'Learner', 'Instructor'])
+  role: 'Admin' | 'Learner' | 'Instructor';
+}

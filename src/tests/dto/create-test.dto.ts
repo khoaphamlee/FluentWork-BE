@@ -1,8 +1,18 @@
+import { IsEnum, IsNotEmpty, IsNumber, IsString, IsDate, IsOptional } from 'class-validator';
+
 export class CreateTestDto {
-    user_id: number;
-    score: number;
-    proficiency_level: 'Beginner' | 'Intermediate' | 'Advanced';
-    duration: string;
-    test_date: Date;
+  @IsNotEmpty()
+  user_id: number;
+
+  @IsNumber()
+  score: number;
+
+  @IsEnum(['Beginner', 'Intermediate', 'Advanced'])
+  proficiency_level: 'Beginner' | 'Intermediate' | 'Advanced';
+
+  @IsString()
+  duration: string;
+
+  @IsDate()
+  test_date: Date;
 }
-  

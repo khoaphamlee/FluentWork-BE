@@ -14,19 +14,35 @@ import {
 export class Lesson {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column({
+      type: 'enum',
+      enum: ['Vocabulary', 'Grammar'],
+      nullable: true
+    })
+    lesson_focus: 'Vocabulary' | 'Grammar' | null;    
   
     @Column({
       type: 'enum',
       enum: ['IT', 'Business', 'Finance', 'Healthcare', 'Hospitality'],
+      nullable: true
     })
-    subject: 'IT' | 'Business' | 'Finance' | 'Healthcare' | 'Hospitality';
+    subject: 'IT' | 'Business' | 'Finance' | 'Healthcare' | 'Hospitality' | null;
   
     @Column({
       type: 'enum',
-      enum: ['Video', 'Audio', 'Quiz'],
+      enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
+      nullable: true
     })
-    lesson_type: 'Video' | 'Audio' | 'Quiz';
-  
+    grammar_point: 'Tense' | 'Passive Voice' | 'Conditional Sentence' | null;
+    
+    @Column({
+      type: 'enum',
+      enum: ['Video', 'Audio', 'Quiz'],
+      array: true,
+    })
+    lesson_type: ('Video' | 'Audio' | 'Quiz')[];
+    
     @Column()
     content_url: string;
   

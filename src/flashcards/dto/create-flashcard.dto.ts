@@ -1,6 +1,13 @@
+import { IsEnum, IsString, MaxLength } from 'class-validator';
+
 export class CreateFlashcardDto {
-    category: 'IT' | 'Business' | 'Finance';
-    term: string;
-    definition: string;
+  @IsEnum(['IT', 'Business', 'Finance'])
+  category: 'IT' | 'Business' | 'Finance';
+
+  @IsString()
+  @MaxLength(255)
+  term: string;
+
+  @IsString()
+  definition: string;
 }
-  

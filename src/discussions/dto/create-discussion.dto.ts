@@ -1,6 +1,16 @@
+import { IsInt, IsString, IsDateString, IsOptional } from 'class-validator';
+
 export class CreateDiscussionDto {
-    user_id: number;
-    lesson_id: number;
-    question_text: string;
-  }
-  
+  @IsInt()
+  user_id: number;
+
+  @IsInt()
+  lesson_id: number;
+
+  @IsString()
+  question_text: string;
+
+  @IsOptional() 
+  @IsDateString()
+  created_at?: Date;
+}
