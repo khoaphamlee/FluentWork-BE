@@ -1,50 +1,53 @@
-import { DiscussionReply } from "src/discussion-replies/entities/discussion-reply.entity";
-import { Discussion } from "src/discussions/entities/discussion.entity";
-import { LearningPath } from "src/learning-paths/entities/learning-path.entity";
-import { 
-    Column, 
-    CreateDateColumn, 
-    Entity, 
-    JoinColumn, 
-    OneToMany, 
-    OneToOne, 
-    PrimaryGeneratedColumn, 
-    UpdateDateColumn 
-} from "typeorm";
+import { Exclude } from 'class-transformer';
+import { IsEmail, IsEnum, IsString } from 'class-validator';
+import { DiscussionReply } from 'src/discussion-replies/entities/discussion-reply.entity';
+import { Discussion } from 'src/discussions/entities/discussion.entity';
+import { LearningPath } from 'src/learning-paths/entities/learning-path.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Entity({name: 'users' })
+@Entity({ name: 'users' })
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({unique: true})
-    username: string;
+  @Column({ unique: true })
+  username: string;
 
-    @Column({unique: true})
-    email: string;
+  @Column({ unique: true })
+  email: string;
 
-    @Column()
-    password_hash: string;
+  @Exclude()
+  @Column()
+  password_hash: string;
 
-    @Column({
-        type: "enum",
-        enum: ['Admin', 'Learner', 'Instructor'],
-        default: 'Learner',
-    })
-    role: 'Admin' | 'Learner' | 'Instructor';
+  @Column({
+    type: 'enum',
+    enum: ['Admin', 'Learner', 'Instructor'],
+    default: 'Learner',
+  })
+  role: 'Admin' | 'Learner' | 'Instructor';
 
-    @CreateDateColumn()
-    created_at: Date;
+  @CreateDateColumn()
+  created_at: Date;
 
-    @UpdateDateColumn()
-    updated_at: Date;
+  @UpdateDateColumn()
+  updated_at: Date;
 
-    @OneToMany(() => Discussion, discussion => discussion.user)
-    discussions: Discussion[];
+  @OneToMany(() => Discussion, (discussion) => discussion.user)
+  discussions: Discussion[];
 
-    @OneToMany(() => DiscussionReply, reply => reply.user)
-    replies: DiscussionReply[];
+  @OneToMany(() => DiscussionReply, (reply) => reply.user)
+  replies: DiscussionReply[];
 
-    @OneToOne(() => LearningPath, learningPath => learningPath)
-    learningPath: LearningPath;
+  @OneToOne(() => LearningPath, (learningPath) => learningPath)
+  learningPath: LearningPath;
 }

@@ -27,6 +27,7 @@ import { Option } from './options/entities/option.entity';
 import { Test } from './tests/entities/test.entity';
 import { LearningPathsModule } from './learning-paths/learning-paths.module';
 import { LearningPath } from './learning-paths/entities/learning-path.entity';
+import { AuthModule } from './auth/auth.module';
 console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
 
 @Module({
@@ -77,7 +78,8 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
             Flashcard,
             Discussion,
             DiscussionReply,
-            LearningPath],
+            LearningPath
+          ],
           synchronize: true, // Cẩn thận khi sử dụng synchronize trong môi trường production
         };
       }
@@ -94,7 +96,8 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     FlashcardsModule,
     DiscussionsModule,
     DiscussionRepliesModule,
-    LearningPathsModule
+    LearningPathsModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],
