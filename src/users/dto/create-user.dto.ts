@@ -7,7 +7,7 @@ export class CreateUserDto {
   email: string;
   @IsString()
   @MinLength(6)
-  password: string;
+  password_hash: string;
   @IsEnum(['Admin', 'Learner', 'Instructor'])
   role: 'Admin' | 'Learner' | 'Instructor';
 }

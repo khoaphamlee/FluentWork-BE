@@ -17,7 +17,9 @@ export class TestsService {
   ) {}
 
   async create(createTestDto: CreateTestDto): Promise<Test> {
-    const user = await this.userRepository.findOneBy({ id: createTestDto.user_id });
+    const user = await this.userRepository.findOneBy({
+      id: createTestDto.user_id,
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -32,6 +34,10 @@ export class TestsService {
   }
 
   async findAll(): Promise<Test[]> {
+    return await this.testRepository.find({ relations: ['user'] });
+  }
+
+  async findAllQuestion(): Promise<Test[]> {
     return await this.testRepository.find({ relations: ['user'] });
   }
 
@@ -57,7 +63,9 @@ export class TestsService {
 
     // Nếu user_id được cập nhật
     if (updateTestDto.user_id) {
-      const user = await this.userRepository.findOneBy({ id: updateTestDto.user_id });
+      const user = await this.userRepository.findOneBy({
+        id: updateTestDto.user_id,
+      });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -71,11 +79,11 @@ export class TestsService {
 
   async remove(id: number): Promise<{ message: string }> {
     const result = await this.testRepository.delete(id);
-  
+
     if (result.affected === 0) {
       throw new NotFoundException(`Test with id ${id} not found`);
     }
-  
+
     return { message: `Test with id ${id} has been successfully deleted` };
-  }  
+  }
 }

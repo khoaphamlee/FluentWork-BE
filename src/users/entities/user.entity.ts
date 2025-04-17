@@ -25,7 +25,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Exclude()
+  //@Exclude()
   @Column()
   password_hash: string;
 

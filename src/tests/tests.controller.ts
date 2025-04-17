@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { TestsService } from './tests.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
@@ -15,6 +23,11 @@ export class TestsController {
   @Get()
   findAll() {
     return this.testsService.findAll();
+  }
+
+  @Get('question')
+  findAllQuestion() {
+    return this.testsService.findAllQuestion();
   }
 
   @Get(':id')

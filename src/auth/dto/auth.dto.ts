@@ -7,8 +7,6 @@ export class RegisterDto {
   email: string;
   @IsString()
   password: string;
-  @IsEnum(['Admin', 'Learner', 'Instructor'])
-  role?: 'Admin' | 'Learner' | 'Instructor';
 }
 
 export class LoginDto {

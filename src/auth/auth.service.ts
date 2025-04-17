@@ -13,7 +13,7 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<Omit<User, 'password_hash'>> {
-    const { username, email, password, role } = dto;
+    const { username, email, password } = dto;
 
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
@@ -25,8 +25,8 @@ export class AuthService {
     const newUser = await this.usersService.create({
       username,
       email,
-      password: hashedPassword,
-      role: role || 'Learner',
+      password_hash: hashedPassword,
+      role: 'Learner',
     });
 
     // Ẩn password_hash khỏi kết quả trả về
