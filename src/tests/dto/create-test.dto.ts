@@ -1,18 +1,30 @@
+import { Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsNumber, IsString, IsDate, IsOptional } from 'class-validator';
+
+export enum ProficiencyLevel {
+  Beginner = 'Beginner',
+  Intermediate = 'Intermediate',
+  Advanced = 'Advanced',
+}
 
 export class CreateTestDto {
   @IsNotEmpty()
-  user_id: number;
+  @IsNumber()
+  user_id: number; 
 
   @IsNumber()
-  score: number;
+  score: number; 
 
-  @IsEnum(['Beginner', 'Intermediate', 'Advanced'])
-  proficiency_level: 'Beginner' | 'Intermediate' | 'Advanced';
+  @IsEnum(ProficiencyLevel) 
+  proficiency_level: ProficiencyLevel; 
 
   @IsString()
-  duration: string;
+  duration: string;  
 
+  @Type(() => Date)
   @IsDate()
   test_date: Date;
+
+  @IsNumber()
+  total_correct_answers: number;
 }

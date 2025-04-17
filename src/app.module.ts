@@ -28,6 +28,12 @@ import { Test } from './tests/entities/test.entity';
 import { LearningPathsModule } from './learning-paths/learning-paths.module';
 import { LearningPath } from './learning-paths/entities/learning-path.entity';
 import { AuthModule } from './auth/auth.module';
+import { TestQuestionsModule } from './test-questions/test-questions.module';
+import { TestTemplatesModule } from './test-templates/test-templates.module';
+import { TestAnswersModule } from './test-answers/test-answers.module';
+import { TestAnswer } from './test-answers/entities/test-answer.entity';
+import { TestQuestion } from './test-questions/entities/test-question.entity';
+import { TestTemplate } from './test-templates/entities/test-template.entity';
 console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
 
 @Module({
@@ -78,7 +84,10 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
             Flashcard,
             Discussion,
             DiscussionReply,
-            LearningPath
+            LearningPath,
+            TestAnswer,
+            TestQuestion,
+            TestTemplate
           ],
           synchronize: true, // Cẩn thận khi sử dụng synchronize trong môi trường production
         };
@@ -97,7 +106,10 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     DiscussionsModule,
     DiscussionRepliesModule,
     LearningPathsModule,
-    AuthModule
+    AuthModule,
+    TestQuestionsModule,
+    TestTemplatesModule,
+    TestAnswersModule
   ],
   controllers: [AppController],
   providers: [AppService],

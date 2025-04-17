@@ -14,14 +14,14 @@ export class Question {
   @Column({
     type: 'enum',
     enum: ['IT', 'Business', 'Finance'],
-    nullable: true, // Chỉ áp dụng cho từ vựng
+    nullable: true,
   })
   category: 'IT' | 'Business' | 'Finance' | null;
 
   @Column({
     type: 'enum',
     enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
-    nullable: true, // Chỉ áp dụng cho Grammar
+    nullable: true,
   })
   grammar_point: 'Tense' | 'Passive Voice' | 'Conditional Sentence' | null;
   
