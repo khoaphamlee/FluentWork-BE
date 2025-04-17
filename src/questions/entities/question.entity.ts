@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from 'typeorm';
+import { Option } from 'src/options/entities/option.entity';
+import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+import { Test } from '@nestjs/testing';
 @Entity({ name: 'questions' })
 export class Question {
   @PrimaryGeneratedColumn()
@@ -33,4 +35,10 @@ export class Question {
 
   @Column('text')
   question_text: string;
+
+  @OneToMany(() => Option, (option) => option.question)
+  options: Option[];
+
+  @OneToOne(() => TestQuestion, (testQuestion) => testQuestion.question)
+  testQuestion: TestQuestion;
 }
