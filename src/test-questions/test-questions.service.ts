@@ -5,6 +5,7 @@ import { CreateTestQuestionDto } from './dto/create-test-question.dto';
 import { UpdateTestQuestionDto } from './dto/update-test-question.dto';
 import { TestQuestion } from './entities/test-question.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
+import { Question } from 'src/questions/entities/question.entity';
 
 @Injectable()
 export class TestQuestionsService {
@@ -14,6 +15,9 @@ export class TestQuestionsService {
 
     @InjectRepository(TestTemplate)
     private readonly testTemplateRepository: Repository<TestTemplate>,
+
+    @InjectRepository(Question)
+    private readonly questionRepository: Repository<Question>,
   ) {}
 
   async create(createDto: CreateTestQuestionDto) {
@@ -25,52 +29,87 @@ export class TestQuestionsService {
       throw new NotFoundException('Test template not found');
     }
 
-    const newQuestion = this.testQuestionRepository.create({
-      question_text: createDto.question_text,
-      options: createDto.options,
-      correct_answer_index: createDto.correct_answer_index,
-      //testTemplate: template,
+    const question = await this.questionRepository.findOne({
+      where: { id: createDto.question_id },
     });
 
-    return await this.testQuestionRepository.save(newQuestion);
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    const newTestQuestion = this.testQuestionRepository.create({
+      testTemplate: template,
+      question: question,
+    });
+
+    return await this.testQuestionRepository.save(newTestQuestion);
   }
 
   async findAll() {
-    return await this.testQuestionRepository.find();
+    return await this.testQuestionRepository.find({
+      relations: ['question'],
+    });
   }
 
   async findOne(id: number) {
-    const question = await this.testQuestionRepository.findOne({
+    const testQuestion = await this.testQuestionRepository.findOne({
       where: { id },
-      relations: ['testTemplate'],
+      relations: ['question'],
     });
 
-    if (!question) {
+    if (!testQuestion) {
       throw new NotFoundException(`Test question with ID ${id} not found`);
     }
 
-    return question;
+    return testQuestion;
   }
 
   async update(id: number, updateDto: UpdateTestQuestionDto) {
-    const question = await this.testQuestionRepository.findOne({ where: { id } });
-
-    if (!question) {
+    const testQuestion = await this.testQuestionRepository.findOne({
+      where: { id },
+      relations: ['question', 'testTemplate'],
+    });
+  
+    if (!testQuestion) {
       throw new NotFoundException(`Test question with ID ${id} not found`);
     }
-
-    const updated = this.testQuestionRepository.merge(question, updateDto);
-    return await this.testQuestionRepository.save(updated);
+  
+    if (updateDto.question_id) {
+      const question = await this.questionRepository.findOne({
+        where: { id: updateDto.question_id },
+      });
+  
+      if (!question) {
+        throw new NotFoundException('Question not found');
+      }
+  
+      testQuestion.question = question;
+    }
+  
+    if (updateDto.test_template_id) {
+      const template = await this.testTemplateRepository.findOne({
+        where: { id: updateDto.test_template_id },
+      });
+  
+      if (!template) {
+        throw new NotFoundException('Test template not found');
+      }
+  
+      testQuestion.testTemplate = template;
+    }
+  
+    return await this.testQuestionRepository.save(testQuestion);
   }
+  
 
   async remove(id: number) {
-    const question = await this.testQuestionRepository.findOne({ where: { id } });
+    const testQuestion = await this.testQuestionRepository.findOne({ where: { id } });
 
-    if (!question) {
+    if (!testQuestion) {
       throw new NotFoundException(`Test question with ID ${id} not found`);
     }
 
-    await this.testQuestionRepository.remove(question);
+    await this.testQuestionRepository.remove(testQuestion);
     return { message: 'Test question deleted successfully', id };
   }
 }
