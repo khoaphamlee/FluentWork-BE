@@ -21,33 +21,29 @@ export class TestQuestionsService {
   ) {}
 
   async create(createDto: CreateTestQuestionDto) {
-    const template = await this.testTemplateRepository.findOne({
-      where: { id: createDto.test_template_id },
+    const template = await this.testTemplateRepository.findOneBy({
+      id: createDto.test_template_id,
     });
-
-    if (!template) {
-      throw new NotFoundException('Test template not found');
-    }
-
-    const question = await this.questionRepository.findOne({
-      where: { id: createDto.question_id },
+  
+    const question = await this.questionRepository.findOneBy({
+      id: createDto.question_id,
     });
-
-    if (!question) {
-      throw new NotFoundException('Question not found');
+  
+    if (!template || !question) {
+      throw new NotFoundException('Template hoặc Question không tồn tại');
     }
-
+  
     const newTestQuestion = this.testQuestionRepository.create({
       testTemplate: template,
       question: question,
     });
-
+  
     return await this.testQuestionRepository.save(newTestQuestion);
-  }
+  }  
 
   async findAll() {
     return await this.testQuestionRepository.find({
-      relations: ['question'],
+      relations: ['question', 'question.options'],
     });
   }
 

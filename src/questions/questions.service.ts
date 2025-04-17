@@ -4,17 +4,42 @@ import { Repository } from 'typeorm';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { Question } from './entities/question.entity';
+import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 
 @Injectable()
 export class QuestionsService {
   constructor(
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+
+    @InjectRepository(TestQuestion)
+    private readonly testQuestionRepository: Repository<TestQuestion>,
+
+    @InjectRepository(TestTemplate)
+    private readonly testTemplateRepository: Repository<TestTemplate>,
   ) {}
 
   async create(createQuestionDto: CreateQuestionDto) {
-    const question = this.questionRepository.create(createQuestionDto);
-    return await this.questionRepository.save(question);
+    const newQuestion = this.questionRepository.create(createQuestionDto);
+    const savedQuestion = await this.questionRepository.save(newQuestion);
+
+    const testTemplate = await this.testTemplateRepository.findOne({
+      where: { id: 1 }, 
+    });
+
+    if (!testTemplate) {
+      throw new Error('Test template not found');
+    }
+
+    const newTestQuestion = this.testQuestionRepository.create({
+      testTemplate: testTemplate, 
+      question: savedQuestion,
+    });
+
+    await this.testQuestionRepository.save(newTestQuestion);
+
+    return savedQuestion;
   }
 
   async findAll() {
