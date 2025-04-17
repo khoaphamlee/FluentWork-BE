@@ -10,21 +10,28 @@ export enum ProficiencyLevel {
 export class CreateTestDto {
   @IsNotEmpty()
   @IsNumber()
-  user_id: number; 
+  userId: number;
 
+  @IsOptional()
   @IsNumber()
-  score: number; 
+  score: number = 0;
 
-  @IsEnum(ProficiencyLevel) 
-  proficiency_level: ProficiencyLevel; 
+  @IsOptional()
+  @IsEnum(ProficiencyLevel)
+  proficiency_level: ProficiencyLevel;
 
   @IsString()
-  duration: string;  
+  duration: string;
 
   @Type(() => Date)
   @IsDate()
   test_date: Date;
 
+  @IsOptional()
   @IsNumber()
-  total_correct_answers: number;
+  total_correct_answers: number = 0;
+
+  @IsNotEmpty()
+  @IsNumber()
+  testTemplateId: number;
 }

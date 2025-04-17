@@ -47,4 +47,18 @@ export class TestTemplatesService {
     }
     return { deleted: true };
   }
+
+  async getTemplateWithQuestions(testTemplateId: number): Promise<TestTemplate> {
+    const template = await this.testTemplateRepository.findOne({
+      where: { id: testTemplateId, is_active: true }, 
+      relations: ['questions', 'questions.question'],
+    });
+
+    if (!template) {
+      throw new NotFoundException(`Test Template with id ${testTemplateId} not found or inactive`);
+    }
+
+    return template;
+  }
+  
 }

@@ -5,6 +5,7 @@ import {
     ManyToOne,
     JoinColumn,
     OneToMany,
+    OneToOne,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
@@ -34,7 +35,7 @@ export class Test {
     @Column({ type: 'timestamp' })
     test_date: Date;
 
-    @ManyToOne(() => TestTemplate, { nullable: true })
+    @OneToOne(() => TestTemplate, { nullable: true })
     @JoinColumn({ name: 'test_template_id' })
     testTemplate: TestTemplate;
     
