@@ -3,6 +3,8 @@ import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
 export class RegisterDto {
   @IsString()
   username: string;
+  @IsString()
+  fullname: string;
   @IsEmail()
   email: string;
   @IsString()

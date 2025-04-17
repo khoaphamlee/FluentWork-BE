@@ -13,10 +13,6 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalInterceptors(
-    new ClassSerializerInterceptor(app.get(Reflector)), // áp dụng @Exclude() cho tất cả các Entity
-  );
-
   await app.listen(process.env.PORT ?? 3000);
   console.log('App running on http://localhost:3000');
 }

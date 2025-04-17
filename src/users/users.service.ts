@@ -21,21 +21,28 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const user = this.usersRepository.create(createUserDto);
-    return await this.usersRepository.save(user);
+    const newUser = await this.usersRepository.save(user);
+    return plainToInstance(User, newUser);
+  }
+
+  async getHashPassword(email: string): Promise<string | null> {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    return user?.password_hash || null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({ where: { email } });
+    return user ? plainToInstance(User, user) : null;
   }
 
   async findAll() {
-    return await this.usersRepository.find();
+    const users = await this.usersRepository.find();
+    return plainToInstance(User, users);
   }
 
   async findOne(id: number) {
-    return await this.usersRepository.findOne({
-      where: { id },
-    });
+    const user = await this.usersRepository.findOne({ where: { id } });
+    return user ? plainToInstance(User, user) : null;
   }
 
   async updateProfile(
@@ -47,7 +54,8 @@ export class UsersService {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
     user.username = updateProfileUserDto.username;
-    return await this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    return plainToInstance(User, savedUser);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -57,7 +65,8 @@ export class UsersService {
     }
 
     Object.assign(user, updateUserDto);
-    return await this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    return plainToInstance(User, savedUser);
   }
 
   async remove(id: number) {
@@ -66,7 +75,8 @@ export class UsersService {
       throw new NotFoundException();
     }
 
-    return await this.usersRepository.remove(user);
+    const removedUser = await this.usersRepository.remove(user);
+    return plainToInstance(User, removedUser);
   }
 
   async changePassword(userId: number, oldPw: string, newPw: string) {
@@ -81,6 +91,7 @@ export class UsersService {
     }
 
     user.password_hash = await bcrypt.hash(newPw, 10);
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    return plainToInstance(User, savedUser);
   }
 }

@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { User } from '../users/entities/user.entity';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -12,8 +13,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<Omit<User, 'password_hash'>> {
-    const { username, email, password } = dto;
+  async register(dto: RegisterDto): Promise<User> {
+    const { username, email, password, fullname } = dto;
 
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
@@ -25,13 +26,12 @@ export class AuthService {
     const newUser = await this.usersService.create({
       username,
       email,
+      fullname,
       password_hash: hashedPassword,
       role: 'Learner',
     });
 
-    // Ẩn password_hash khỏi kết quả trả về
-    const { password_hash, ...safeData } = newUser;
-    return safeData;
+    return newUser;
   }
 
   async login(dto: LoginDto): Promise<{ access_token: string }> {
@@ -39,7 +39,15 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new UnauthorizedException('Email không tồn tại');
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const user_password_hash = await this.usersService.getHashPassword(
+      user.email,
+    );
+
+    if (!user_password_hash) {
+      throw new UnauthorizedException('Không tìm thấy mật khẩu người dùng');
+    }
+
+    const isMatch = await bcrypt.compare(password, user_password_hash);
     if (!isMatch) throw new UnauthorizedException('Mật khẩu không đúng');
 
     const payload = {
