@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsEnum, IsString } from 'class-validator';
 import { DiscussionReply } from 'src/discussion-replies/entities/discussion-reply.entity';
@@ -16,22 +17,28 @@ import {
 
 @Entity({ name: 'users' })
 export class User {
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ApiProperty()
   @Column({ unique: true })
   username: string;
 
+  @ApiProperty()
   @Column({ unique: true })
   email: string;
 
+  @ApiProperty()
   @Column()
   fullname: string;
 
+  @ApiProperty()
   @Exclude()
   @Column()
   password_hash: string;
 
+  @ApiProperty()
   @Column({
     type: 'enum',
     enum: ['Admin', 'Learner', 'Instructor'],
@@ -39,9 +46,13 @@ export class User {
   })
   role: 'Admin' | 'Learner' | 'Instructor';
 
+  @ApiProperty()
+  @Exclude()
   @CreateDateColumn()
   created_at: Date;
 
+  @ApiProperty()
+  @Exclude()
   @UpdateDateColumn()
   updated_at: Date;
 

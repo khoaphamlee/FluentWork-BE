@@ -21,8 +21,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const user = this.usersRepository.create(createUserDto);
-    const newUser = await this.usersRepository.save(user);
-    return plainToInstance(User, newUser);
+    return await this.usersRepository.save(user);
   }
 
   async getHashPassword(email: string): Promise<string | null> {
@@ -32,17 +31,17 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.usersRepository.findOne({ where: { email } });
-    return user ? plainToInstance(User, user) : null;
+    return user;
   }
 
   async findAll() {
     const users = await this.usersRepository.find();
-    return plainToInstance(User, users);
+    return users;
   }
 
   async findOne(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
-    return user ? plainToInstance(User, user) : null;
+    return user;
   }
 
   async updateProfile(
@@ -55,7 +54,7 @@ export class UsersService {
     }
     user.username = updateProfileUserDto.username;
     const savedUser = await this.usersRepository.save(user);
-    return plainToInstance(User, savedUser);
+    return savedUser;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -66,7 +65,7 @@ export class UsersService {
 
     Object.assign(user, updateUserDto);
     const savedUser = await this.usersRepository.save(user);
-    return plainToInstance(User, savedUser);
+    return savedUser;
   }
 
   async remove(id: number) {
@@ -76,7 +75,7 @@ export class UsersService {
     }
 
     const removedUser = await this.usersRepository.remove(user);
-    return plainToInstance(User, removedUser);
+    return removedUser;
   }
 
   async changePassword(userId: number, oldPw: string, newPw: string) {
@@ -92,6 +91,6 @@ export class UsersService {
 
     user.password_hash = await bcrypt.hash(newPw, 10);
     const savedUser = await this.usersRepository.save(user);
-    return plainToInstance(User, savedUser);
+    return savedUser;
   }
 }

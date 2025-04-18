@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   ForbiddenException,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,24 +19,42 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Request } from '@nestjs/common';
 import { UpdateProfileUserDto } from './dto/update-profile-user.dto';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { User } from './entities/user.entity';
+import { ReturnUserDto } from './dto/return-user-dto';
 
+@ApiTags('Users') // Gắn thẻ cho group Swagger
+@ApiBearerAuth() // Nếu sử dụng JWT
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
+  @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng' })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: ReturnUserDto,
+    description: 'Thông tin hồ sơ người dùng',
+  })
   @UseGuards(JwtAuthGuard)
   getProfile(@Request() req) {
     return this.usersService.findOne(req.user.userId); // từ payload JWT
   }
 
   @Patch('profile')
+  @ApiOperation({ summary: 'Cập nhật thông tin hồ sơ người dùng' })
   @UseGuards(JwtAuthGuard)
   updateProfile(@Request() req, @Body() dto: UpdateProfileUserDto) {
     return this.usersService.updateProfile(req.user.userId, dto);
   }
 
   @Patch('change-password')
+  @ApiOperation({ summary: 'Thay đổi mật khẩu' })
   @UseGuards(JwtAuthGuard)
   async changePassword(
     @Request() req,
@@ -47,7 +67,7 @@ export class UsersController {
     );
   }
 
-  @Get('admin/all')
+  @Get('')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
   findAll() {
