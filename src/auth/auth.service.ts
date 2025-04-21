@@ -5,6 +5,8 @@ import { UsersService } from '../users/users.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { User } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { UserDto } from 'src/users/dto/user-dto';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +15,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<User> {
+  async register(dto: RegisterDto) {
     const { username, email, password, fullname } = dto;
 
     const existing = await this.usersService.findByEmail(email);
@@ -28,10 +30,10 @@ export class AuthService {
       email,
       fullname,
       password_hash: hashedPassword,
-      role: 'Learner',
+      role: UserRole.Learner,
     });
-
-    return newUser;
+    const { created_at, updated_at, ...returnUser } = newUser;
+    return returnUser;
   }
 
   async login(dto: LoginDto): Promise<{ access_token: string }> {
@@ -47,8 +49,11 @@ export class AuthService {
       throw new UnauthorizedException('Không tìm thấy mật khẩu người dùng');
     }
 
-    const isMatch = await bcrypt.compare(password, user_password_hash);
-    if (!isMatch) throw new UnauthorizedException('Mật khẩu không đúng');
+    const sanitizedHash = user.password_hash.replace('$2y$', '$2a$');
+    const isMatch = await bcrypt.compare(password, sanitizedHash);
+    if (!isMatch) {
+      throw new UnauthorizedException('Mật khẩu không đúng');
+    }
 
     const payload = {
       sub: user.id,

@@ -3,11 +3,13 @@ import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { EmptyBodyValidationPipe } from './common/pipes/empty-body-validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
+    new EmptyBodyValidationPipe(), // check empty body
     new ValidationPipe({
       whitelist: true, // Chỉ cho phép các field có trong DTO
       forbidNonWhitelisted: true, // Nếu gửi field lạ → báo lỗi
@@ -24,10 +26,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
-
   app.useGlobalInterceptors(new LoggingInterceptor()); // interceptor
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector))); // áp dụng cho mọi controller và trả về dữ liệu đã xử lý @Exclude() hoặc @Expose()
-
   await app.listen(process.env.PORT ?? 3000);
   console.log('App running on http://localhost:3000');
 }

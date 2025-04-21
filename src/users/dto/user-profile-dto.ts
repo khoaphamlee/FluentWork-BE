@@ -3,7 +3,7 @@ import { CreateUserDto } from './create-user.dto';
 import { IsEnum } from 'class-validator';
 import { UserRole } from 'src/common/enums/user-role.enum';
 
-export class ReturnUserDto {
+export class UserProfileDto {
   @ApiProperty()
   id: number;
   @ApiProperty()
@@ -12,6 +12,6 @@ export class ReturnUserDto {
   email: string;
   @ApiProperty()
   fullname: string;
-  @ApiProperty({ enum: ['Admin', 'Instructor', 'Learner'] })
+  @ApiProperty({ enum: UserRole })
   role: UserRole;
 }

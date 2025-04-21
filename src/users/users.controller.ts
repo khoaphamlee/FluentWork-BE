@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   UseInterceptors,
   ClassSerializerInterceptor,
+  UsePipes,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,100 +19,144 @@ import { Roles } from 'src/auth/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Request } from '@nestjs/common';
-import { UpdateProfileUserDto } from './dto/update-profile-user.dto';
+
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
-import { ReturnUserDto } from './dto/return-user-dto';
+
+import { MessageResponseDto } from 'src/common/dto/message-response.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ChangePasswordSuccessDto } from './dto/change-password-success.dto';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { UserProfileDto } from './dto/user-profile-dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UserDto } from './dto/user-dto';
+import { RemoveUserSuccessDto } from './dto/remove-user-success.dto';
+import { EmptyBodyValidationPipe } from 'src/common/pipes/empty-body-validation.pipe';
 
 @ApiTags('Users') // Gắn thẻ cho group Swagger
-@ApiBearerAuth() // Nếu sử dụng JWT
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng' })
-  @ApiBearerAuth()
-  @ApiOkResponse({
-    type: ReturnUserDto,
+  @ApiBearerAuth() // bảo vệ API bằng cách xác thực access_token
+  @ApiResponse({
+    status: 201,
+    type: UserProfileDto,
     description: 'Thông tin hồ sơ người dùng',
   })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard) // API chỉ cho phép truy cập nếu người dùng đã đăng nhập và gửi kèm access_token hợp lệ trong request.
   getProfile(@Request() req) {
-    return this.usersService.findOne(req.user.userId); // từ payload JWT
+    return this.usersService.getProfile(req.user.userId);
   }
 
   @Patch('profile')
   @ApiOperation({ summary: 'Cập nhật thông tin hồ sơ người dùng' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: UserProfileDto,
+    description: 'Thông tin hồ sơ người dùng đã được cập nhật',
+  })
   @UseGuards(JwtAuthGuard)
-  updateProfile(@Request() req, @Body() dto: UpdateProfileUserDto) {
+  updateProfile(@Request() req, @Body() dto: UpdateUserProfileDto) {
     return this.usersService.updateProfile(req.user.userId, dto);
   }
 
   @Patch('change-password')
   @ApiOperation({ summary: 'Thay đổi mật khẩu' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: ChangePasswordSuccessDto,
+    description: 'Mật khẩu đã thay đổi',
+  })
   @UseGuards(JwtAuthGuard)
-  async changePassword(
-    @Request() req,
-    @Body() body: { oldPassword: string; newPassword: string },
-  ) {
-    return this.usersService.changePassword(
-      req.user.userId,
-      body.oldPassword,
-      body.newPassword,
-    );
+  async changePassword(@Request() req, @Body() body: ChangePasswordDto) {
+    return this.usersService.changePassword(req.user.userId, body);
   }
 
   @Get('')
+  @ApiOperation({ summary: 'Danh sách tất cả người dùng trong hệ thống' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: UserDto,
+    isArray: true,
+    description: 'Danh sách người dùng',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin')
+  @Roles(UserRole.Admin) // Chỉ admin mới có thể truy cập vào API dưới
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Lấy thông tin người dùng trong hệ thống' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: UserDto,
+    description: 'Người dùng',
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin)
   async findOne(@Request() req, @Param('id') id: string) {
     const requestedId = +id;
-    const currentUser = req.user;
-
-    if (currentUser.role === 'Admin' || currentUser.userId === requestedId) {
-      return this.usersService.findOne(requestedId);
-    }
-
-    throw new ForbiddenException('Bạn không có quyền truy cập người dùng này');
+    return this.usersService.findOne(requestedId);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Tạo người dùng trong hệ thống' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: User,
+    description: 'Người dùng',
+  })
   //Uncomment 2 dòng bên dưới để tạo Admin
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin')
+  //@UseGuards(JwtAuthGuard, RolesGuard)
+  //@Roles('Admin')
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Cập nhật người dùng trong hệ thống' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: UserDto,
+    description: 'Người dùng',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin') // Hoặc kiểm tra nếu id === req.user.userId
-  update(
+  @Roles('Admin')
+  async update(
     @Request() req,
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    if (req.user.role !== 'Admin' && req.user.userId !== +id) {
-      throw new ForbiddenException('Bạn không có quyền sửa người dùng này');
-    }
-    return this.usersService.update(+id, updateUserDto);
+    return await this.usersService.update(+id, updateUserDto);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Xóa người dùng trong hệ thống' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    type: RemoveUserSuccessDto,
+    description: 'Người dùng',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin') // Hoặc logic tương tự trên
+  @Roles('Admin')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
