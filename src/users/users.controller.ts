@@ -119,7 +119,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiResponse({
     status: 201,
-    type: User,
+    type: UserDto,
     description: 'Người dùng',
   })
   //Uncomment 2 dòng bên dưới để tạo Admin
