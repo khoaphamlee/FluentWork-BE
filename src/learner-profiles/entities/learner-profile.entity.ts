@@ -29,7 +29,7 @@ export class LearnerProfile {
       enum: ['Beginner', 'Intermediate', 'Advanced'],
       default: 'Beginner',
     })
-    proficiency_level: 'Beginner' | 'Intermediate' | 'Advanced';
+    level: 'Beginner' | 'Intermediate' | 'Advanced';
   
     @Column({ default: 0 })
     total_lessons_completed: number;
