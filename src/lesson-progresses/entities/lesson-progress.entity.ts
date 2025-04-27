@@ -4,16 +4,19 @@ import {
     Column,
     ManyToOne,
     JoinColumn,
-} from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Lesson } from '../../lessons/entities/lesson.entity';
+    CreateDateColumn,
+    UpdateDateColumn,
+    OneToOne,
+  } from 'typeorm';
+  import { User } from '../../users/entities/user.entity';
+  import { Lesson } from '../../lessons/entities/lesson.entity';
   
-@Entity({ name: 'lesson_progress' })
-export class LessonProgress {
+  @Entity({ name: 'lesson_progress' })
+  export class LessonProgress {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @OneToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
   
@@ -28,13 +31,19 @@ export class LessonProgress {
     })
     status: 'Not Started' | 'In Progress' | 'Completed';
   
-    @Column({ type: 'float', nullable: true })
-    score: number;
+    @Column({ type: 'int', default: 0 })
+    total_correct_answers: number;
   
     @Column({ type: 'timestamp', nullable: true })
     started_at: Date;
   
     @Column({ type: 'timestamp', nullable: true })
     completed_at: Date;
-}
+  
+    @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
+  
+    @UpdateDateColumn({ name: 'updated_at' })
+    updatedAt: Date;
+  }
   

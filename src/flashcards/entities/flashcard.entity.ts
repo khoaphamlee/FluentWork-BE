@@ -9,10 +9,10 @@ export class Flashcard {
     type: 'enum',
     enum: ['IT', 'Business', 'Finance'],
   })
-  category: 'IT' | 'Business' | 'Finance';
+  topic: 'IT' | 'Business' | 'Finance';
 
   @Column()
-  term: string;
+  word: string;
 
   @Column('text')
   definition: string;

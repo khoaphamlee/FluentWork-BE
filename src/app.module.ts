@@ -34,6 +34,20 @@ import { TestAnswersModule } from './test-answers/test-answers.module';
 import { TestAnswer } from './test-answers/entities/test-answer.entity';
 import { TestQuestion } from './test-questions/entities/test-question.entity';
 import { TestTemplate } from './test-templates/entities/test-template.entity';
+import { LearningPathLessonsModule } from './learning-path-lessons/learning-path-lessons.module';
+import { LessonQuestionsModule } from './lesson-questions/lesson-questions.module';
+import { LessonAnswersModule } from './lesson-answers/lesson-answers.module';
+import { TestMistakesModule } from './test-mistakes/test-mistakes.module';
+import { UserMistakesModule } from './user-mistakes/user-mistakes.module';
+import { LessonQasModule } from './lesson-qas/lesson-qas.module';
+import { LessonQaAnswersModule } from './lesson-qa-answers/lesson-qa-answers.module';
+import { LearningPathLesson } from './learning-path-lessons/entities/learning-path-lesson.entity';
+import { LessonAnswer } from './lesson-answers/entities/lesson-answer.entity';
+import { LessonQuestion } from './lesson-questions/entities/lesson-question.entity';
+import { LessonQa } from './lesson-qas/entities/lesson-qa.entity';
+import { LessonQaAnswer } from './lesson-qa-answers/entities/lesson-qa-answer.entity';
+import { TestMistake } from './test-mistakes/entities/test-mistake.entity';
+import { UserMistake } from './user-mistakes/entities/user-mistake.entity';
 console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
 
 @Module({
@@ -87,9 +101,17 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
             LearningPath,
             TestAnswer,
             TestQuestion,
-            TestTemplate
+            TestTemplate,
+            LearningPath,
+            LearningPathLesson,
+            LessonAnswer,
+            LessonQuestion,
+            LessonQa,
+            LessonQaAnswer,
+            TestMistake,
+            UserMistake
           ],
-          synchronize: true, // Cẩn thận khi sử dụng synchronize trong môi trường production
+          synchronize: true,
         };
       }
       
@@ -109,7 +131,14 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     AuthModule,
     TestQuestionsModule,
     TestTemplatesModule,
-    TestAnswersModule
+    TestAnswersModule,
+    LearningPathLessonsModule,
+    LessonQuestionsModule,
+    LessonAnswersModule,
+    TestMistakesModule,
+    UserMistakesModule,
+    LessonQasModule,
+    LessonQaAnswersModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,12 +5,14 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     OneToMany,
+    OneToOne,
   } from 'typeorm';
-  import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
+import { Test } from 'src/tests/entities/test.entity';
   
-  @Entity({ name: 'test_templates' })
-  export class TestTemplate {
+@Entity({ name: 'test_templates' })
+export class TestTemplate {
     @PrimaryGeneratedColumn()
     id: number;
   
@@ -31,5 +33,8 @@ import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
   
     @OneToMany(() => TestQuestion, (question) => question.testTemplate)
     questions: TestQuestion[];
+
+    @OneToOne(() => Test, (test) => test.testTemplate)
+    test: Test;
 }
   

@@ -7,12 +7,12 @@ import {
     OneToMany,
     OneToOne,
   } from 'typeorm';
-  import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
+import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { Question } from 'src/questions/entities/question.entity';
   
-  @Entity({ name: 'test_questions' })
-  export class TestQuestion {
+@Entity({ name: 'test_questions' })
+export class TestQuestion {
     @PrimaryGeneratedColumn()
     id: number;
   
@@ -23,9 +23,8 @@ import { Question } from 'src/questions/entities/question.entity';
     @OneToOne(() => TestAnswer, (answer) => answer.testQuestion)
     answer: TestAnswer;
 
-    @OneToOne(() => Question, (question) => question.testQuestion, {
-        eager: false,     
-        cascade: false,  
+    @ManyToOne(() => Question, (question) => question.testQuestion, {
+        onDelete: 'CASCADE',  
     })
     @JoinColumn({ name: 'question_id' }) 
     question: Question;

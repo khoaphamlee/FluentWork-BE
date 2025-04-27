@@ -32,16 +32,6 @@ export class TestsController {
     return this.testsService.create(createTestDto);
   }
 
-  // @Post('submit')
-  // async submitTest(@Body() dto: SubmitTestDto) {
-  //   return this.testsService.submitTest(dto);
-  // }
-
-  // @Get('result')
-  // async getResult(@Query('userId') userId: number) {
-  //   return this.testService.getLatestResult(userId);
-  // }
-
   @Get()
   findAll() {
     return this.testsService.findAll();
@@ -86,9 +76,9 @@ export class TestsController {
       questionId: q.question.id,
       questionText: q.question.question_text,
       options: q.question.options,
-      difficulty: q.question.difficulty,
+      difficulty: q.question.level,
       topic: q.question.topic,
-      category: q.question.category,
+      category: q.question.vocabulary_topic,
     }));
   }
 

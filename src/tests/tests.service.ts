@@ -39,10 +39,10 @@ export class TestsService {
     test.testTemplate = template;
 
     test.score = dto.score ?? 0;
-    test.proficiency_level = dto.proficiency_level;
+    test.level = dto.proficiency_level;
     test.duration = dto.duration;
     test.test_date = dto.test_date;
-    test.total_correct_answers = dto.total_correct_answers ?? 0;
+    test.total_correct_answer = dto.total_correct_answers ?? 0;
 
     return this.testRepository.save(test);
   }
@@ -114,11 +114,11 @@ export class TestsService {
     } = updateTestDto;
 
     if (score !== undefined) test.score = score;
-    if (proficiency_level) test.proficiency_level = proficiency_level;
+    if (proficiency_level) test.level = proficiency_level;
     if (duration) test.duration = duration;
     if (test_date) test.test_date = test_date;
     if (total_correct_answers !== undefined)
-      test.total_correct_answers = total_correct_answers;
+      test.total_correct_answer = total_correct_answers;
 
     return await this.testRepository.save(test);
   }
