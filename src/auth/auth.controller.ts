@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, ForgotPasswordDto } from './dto/auth.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserProfileDto } from 'src/users/dto/user-profile-dto';
 
@@ -35,5 +35,12 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Sai email hoặc mật khẩu' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Quên mật khẩu - Đổi mật khẩu mới qua email' })
+  @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 }
