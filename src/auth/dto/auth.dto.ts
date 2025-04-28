@@ -25,3 +25,19 @@ export class LoginDto {
   @IsString()
   password: string;
 }
+
+export class ForgotPasswordDto {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(6)
+  confirmPassword: string;
+}
