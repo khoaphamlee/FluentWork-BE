@@ -1,80 +1,113 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    UseGuards,
+    InternalServerErrorException,
+    NotFoundException,
 } from '@nestjs/common';
 import { TestTemplatesService } from './test-templates.service';
 import { CreateTestTemplateDto } from './dto/create-test-template.dto';
 import { UpdateTestTemplateDto } from './dto/update-test-template.dto';
 import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
+    ApiBearerAuth,
+    ApiCreatedResponse,
+    ApiInternalServerErrorResponse,
+    ApiNotFoundResponse,
+    ApiOkResponse,
+    ApiOperation,
+    ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ReturnTestTemplateDto } from './dto/return-test-template.dto';
-
+import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+  
 @ApiTags('Test Templates')
-@ApiBearerAuth()
+//@ApiBearerAuth()
 //@UseGuards(JwtAuthGuard)
 @Controller('test-templates')
 export class TestTemplatesController {
-  constructor(private readonly testTemplatesService: TestTemplatesService) {}
+    constructor(private readonly testTemplatesService: TestTemplatesService) {}
+  
+    @Post()
+    @ApiOperation({ summary: 'Create a new test template' })
+    @ApiCreatedResponse({
+        type: ReturnTestTemplateDto,
+        description: 'Successfully created a new test template',
+    })
+    create(@Body() createTestTemplateDto: CreateTestTemplateDto) {
+        return this.testTemplatesService.create(createTestTemplateDto);
+    }
+  
+    @Get()
+    @ApiOperation({ summary: 'Retrieve all test templates' })
+    @ApiOkResponse({
+        type: [ReturnTestTemplateDto],
+        description: 'List of all test templates',
+    })
+    findAll() {
+        return this.testTemplatesService.findAll();
+    }
+  
+    @Get(':id')
+    @ApiOperation({ summary: 'Retrieve a test template by ID' })
+    @ApiOkResponse({
+        type: ReturnTestTemplateDto,
+        description: 'Details of the test template',
+    })
+    findOne(@Param('id') id: string) {
+        return this.testTemplatesService.findOne(+id);
+    }
+  
+    @Patch(':id')
+    @ApiOperation({ summary: 'Update a test template by ID' })
+    @ApiOkResponse({
+        type: ReturnTestTemplateDto,
+        description: 'Updated test template',
+    })
+    update(
+        @Param('id') id: string,
+        @Body() updateTestTemplateDto: UpdateTestTemplateDto,
+    ) {
+        return this.testTemplatesService.update(+id, updateTestTemplateDto);
+    }
+  
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete a test template by ID' })
+    @ApiOkResponse({ description: 'Successfully deleted the test template' })
+    remove(@Param('id') id: string) {
+        return this.testTemplatesService.remove(+id);
+    }
 
-  @Post()
-  @ApiOperation({ summary: 'Tạo mẫu đề thi mới' })
-  @ApiCreatedResponse({
-    type: ReturnTestTemplateDto,
-    description: 'Tạo mẫu đề thi thành công',
-  })
-  create(@Body() createTestTemplateDto: CreateTestTemplateDto) {
-    return this.testTemplatesService.create(createTestTemplateDto);
-  }
+    @Get(':id/questions')
+    @ApiOperation({ summary: 'Retrieve all questions for a test template by ID' })
+    @ApiOkResponse({
+        type: [TestQuestion],
+        description: 'List of questions related to the test template',
+    })
+    @ApiNotFoundResponse({
+        description: 'Test template not found',
+    })
+    @ApiInternalServerErrorResponse({
+        description: 'Unexpected error occurred',
+    })
+    async getTestQuestionsByTemplate(@Param('id') id: number) {
+        try {
+            // Gọi service để lấy danh sách câu hỏi theo template
+            return await this.testTemplatesService.getTestQuestionsByTemplate(id);
+        } catch (error) {
+            // Xử lý lỗi khi không tìm thấy testTemplate
+            if (error.message === 'Test template not found') {
+                throw new NotFoundException(error.message);
+            }
+            // Xử lý lỗi khác (nếu có)
+            throw new InternalServerErrorException('Unexpected error occurred');
+        }
+    }
 
-  @Get()
-  @ApiOperation({ summary: 'Lấy danh sách tất cả mẫu đề thi' })
-  @ApiOkResponse({
-    type: [ReturnTestTemplateDto],
-    description: 'Danh sách mẫu đề thi',
-  })
-  findAll() {
-    return this.testTemplatesService.findAll();
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Lấy thông tin một mẫu đề thi' })
-  @ApiOkResponse({
-    type: ReturnTestTemplateDto,
-    description: 'Thông tin chi tiết mẫu đề thi',
-  })
-  findOne(@Param('id') id: string) {
-    return this.testTemplatesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Cập nhật mẫu đề thi' })
-  @ApiOkResponse({
-    type: ReturnTestTemplateDto,
-    description: 'Mẫu đề thi sau khi cập nhật',
-  })
-  update(
-    @Param('id') id: string,
-    @Body() updateTestTemplateDto: UpdateTestTemplateDto,
-  ) {
-    return this.testTemplatesService.update(+id, updateTestTemplateDto);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Xoá mẫu đề thi' })
-  @ApiOkResponse({ description: 'Xoá mẫu đề thi thành công' })
-  remove(@Param('id') id: string) {
-    return this.testTemplatesService.remove(+id);
-  }
 }
+  

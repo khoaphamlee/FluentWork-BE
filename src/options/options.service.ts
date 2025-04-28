@@ -1,26 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Option } from './entities/option.entity';
 import { CreateOptionDto } from './dto/create-option.dto';
 import { UpdateOptionDto } from './dto/update-option.dto';
 
 @Injectable()
 export class OptionsService {
-  create(createOptionDto: CreateOptionDto) {
-    return 'This action adds a new option';
+  constructor(
+    @InjectRepository(Option)
+    private readonly optionRepository: Repository<Option>,
+  ) {}
+
+  async create(createOptionDto: CreateOptionDto): Promise<Option> {
+    const option = this.optionRepository.create(createOptionDto);
+    return await this.optionRepository.save(option);
   }
 
-  findAll() {
-    return `This action returns all options`;
+  async findAll(): Promise<Option[]> {
+    return await this.optionRepository.find({
+      relations: ['question'], // Nếu muốn tự động lấy luôn question liên quan
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} option`;
+  async findOne(id: number): Promise<Option> {
+    const option = await this.optionRepository.findOne({
+      where: { id },
+      relations: ['question'],
+    });
+    if (!option) {
+      throw new NotFoundException(`Option with ID ${id} not found`);
+    }
+    return option;
   }
 
-  update(id: number, updateOptionDto: UpdateOptionDto) {
-    return `This action updates a #${id} option`;
+  async update(id: number, updateOptionDto: UpdateOptionDto): Promise<Option> {
+    const option = await this.findOne(id);
+    const updatedOption = this.optionRepository.merge(option, updateOptionDto);
+    return await this.optionRepository.save(updatedOption);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} option`;
+  async remove(id: number): Promise<void> {
+    const option = await this.findOne(id);
+    await this.optionRepository.remove(option);
   }
 }

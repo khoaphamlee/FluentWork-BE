@@ -21,6 +21,35 @@ export class TestTemplate {
   
     @Column({ type: 'text', nullable: true })
     description?: string;
+
+    @Column({
+        type: 'enum',
+        enum: ['Vocabulary', 'Grammar', 'Mixed'],
+    })
+    topic: 'Vocabulary' | 'Grammar' | 'Mixed';
+
+    @Column({
+        type: 'enum',
+        enum: ['IT', 'Business', 'Finance'],
+        array: true,
+        nullable: true,
+    })
+    vocabulary_topic: ('IT' | 'Business' | 'Finance')[] | null;
+
+    @Column({
+        type: 'enum',
+        enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
+        array: true,
+        nullable: true,
+    })
+    grammar_topic: ('Tense' | 'Passive Voice' | 'Conditional Sentence')[] | null;
+
+    @Column({
+        type: 'enum',
+        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        nullable: true,
+    })
+    level: 'Beginner' | 'Intermediate' | 'Advanced' | null;
   
     @Column({ default: false })
     is_active: boolean;
