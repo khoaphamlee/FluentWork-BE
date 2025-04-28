@@ -103,4 +103,8 @@ export class QuestionsController {
     remove(@Param('id') id: string) {
         return this.questionsService.remove(+id);
     }
+
+    async onModuleInit() {
+        await this.questionsService.createFakeData();
+    }
 }

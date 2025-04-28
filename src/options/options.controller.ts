@@ -49,4 +49,8 @@ export class OptionsController {
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.optionsService.remove(id);
     }
+
+    async onModuleInit() {
+        await this.optionsService.createFakeData();
+      } 
 }

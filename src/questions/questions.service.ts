@@ -6,6 +6,7 @@ import { UpdateQuestionDto } from './dto/update-question.dto';
 import { Question } from './entities/question.entity';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
+import { faker } from '@faker-js/faker';
 
 @Injectable()
 export class QuestionsService {
@@ -134,5 +135,23 @@ export class QuestionsService {
     }
     await this.questionRepository.remove(question);
     return { message: 'Question deleted successfully' };
+  }
+
+  async createFakeData(): Promise<void> {
+    const fakeQuestions: Question[] = []; 
+
+    for (let i = 0; i < 10; i++) {
+      const question = new Question();
+      question.topic = faker.helpers.arrayElement(['Vocabulary', 'Grammar']);
+      question.vocabulary_topic = faker.helpers.arrayElement(['IT', 'Business', 'Finance']);
+      question.grammar_topic = faker.helpers.arrayElement(['Tense', 'Passive Voice', 'Conditional Sentence']);
+      question.level = faker.helpers.arrayElement(['Beginner', 'Intermediate', 'Advanced']);
+      question.question_text = faker.lorem.sentence();
+
+      fakeQuestions.push(question);
+    }
+
+    await this.questionRepository.save(fakeQuestions);
+    console.log('Fake data đã được thêm vào database!');
   }
 }

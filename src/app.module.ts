@@ -56,18 +56,6 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      // useFactory: (configService: ConfigService) => {
-      //   return {
-      //     type: 'postgres',
-      //     host: configService.get('DB_HOST'),
-      //     port: +configService.get('DB_PORT'),
-      //     username: configService.get('DB_USERNAME'),
-      //     password: configService.get('DB_PASSWORD'),
-      //     database: configService.get('DB_NAME'),
-      //     entities: [User],
-      //     synchronize: true,
-      //   };
-      // }
       useFactory: (configService: ConfigService) => {
         const dbHost = configService.get('DB_HOST');
         const dbPort = configService.get('DB_PORT');
