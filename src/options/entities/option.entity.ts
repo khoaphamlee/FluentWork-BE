@@ -26,9 +26,6 @@ export class Option {
   
     @Column()
     is_correct: boolean;
-  
-    @Column('text', { nullable: true })
-    explanation: string;
 
     @OneToMany(() => LessonAnswer, (lessonAnswer) => lessonAnswer.option)
     lessonAnswers: LessonAnswer[];

@@ -7,6 +7,7 @@ import { Question } from './entities/question.entity';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { faker } from '@faker-js/faker';
+import { Option } from 'src/options/entities/option.entity';
 
 @Injectable()
 export class QuestionsService {
@@ -19,27 +20,27 @@ export class QuestionsService {
 
     @InjectRepository(TestTemplate)
     private readonly testTemplateRepository: Repository<TestTemplate>,
+
+    @InjectRepository(Option)
+    private readonly optionRepository: Repository<Option>,
   ) {}
 
   async create(createQuestionDto: CreateQuestionDto) {
-    const newQuestion = this.questionRepository.create(createQuestionDto);
+    const { options, ...questionData } = createQuestionDto;
+
+    const newQuestion = this.questionRepository.create(questionData);
     const savedQuestion = await this.questionRepository.save(newQuestion);
 
-    // const testTemplate = await this.testTemplateRepository.findOne({
-    //   where: { id: 1 },
-    // });
+    const optionEntities = options.map((opt) =>
+        this.optionRepository.create({
+        ...opt,
+        question: savedQuestion,
+        }),
+    );
 
-    // if (!testTemplate) {
-    //   throw new NotFoundException('Test template not found');
-    // }
+    await this.optionRepository.save(optionEntities);
 
-    // const newTestQuestion = this.testQuestionRepository.create({
-    //   testTemplate,
-    //   question: savedQuestion,
-    // });
-
-    // await this.testQuestionRepository.save(newTestQuestion);
-
+    savedQuestion.options = optionEntities;
     return savedQuestion;
   }
 
@@ -138,20 +139,52 @@ export class QuestionsService {
   }
 
   async createFakeData(): Promise<void> {
-    const fakeQuestions: Question[] = []; 
-
     for (let i = 0; i < 10; i++) {
       const question = new Question();
-      question.topic = faker.helpers.arrayElement(['Vocabulary', 'Grammar']);
-      question.vocabulary_topic = faker.helpers.arrayElement(['IT', 'Business', 'Finance']);
-      question.grammar_topic = faker.helpers.arrayElement(['Tense', 'Passive Voice', 'Conditional Sentence']);
-      question.level = faker.helpers.arrayElement(['Beginner', 'Intermediate', 'Advanced']);
-      question.question_text = faker.lorem.sentence();
 
-      fakeQuestions.push(question);
+      const topic = faker.helpers.arrayElement(['Vocabulary', 'Grammar']);
+      question.topic = topic as 'Vocabulary' | 'Grammar';
+
+      if (topic === 'Vocabulary') {
+        question.vocabulary_topic = faker.helpers.arrayElement(['IT', 'Business', 'Finance']) as
+          | 'IT'
+          | 'Business'
+          | 'Finance';
+        question.grammar_topic = null;
+      } else {
+        question.grammar_topic = faker.helpers.arrayElement([
+          'Tense',
+          'Passive Voice',
+          'Conditional Sentence',
+        ]) as 'Tense' | 'Passive Voice' | 'Conditional Sentence';
+        question.vocabulary_topic = null;
+      }
+
+      question.level = faker.helpers.arrayElement(['Beginner', 'Intermediate', 'Advanced']) as
+        | 'Beginner'
+        | 'Intermediate'
+        | 'Advanced';
+
+      question.question_text = faker.lorem.sentence();
+      question.explanation = faker.lorem.sentence();
+
+      const savedQuestion = await this.questionRepository.save(question);
+
+      const correctIndex = faker.number.int({ min: 0, max: 3 });
+      const options: Option[] = [];
+
+      for (let j = 0; j < 4; j++) {
+        const option = new Option();
+        option.option_text = faker.lorem.words(3);
+        option.is_correct = j === correctIndex;
+        option.question = savedQuestion;
+
+        options.push(option);
+      }
+
+      await this.optionRepository.save(options);
     }
 
-    await this.questionRepository.save(fakeQuestions);
-    console.log('Fake data đã được thêm vào database!');
+    console.log('Đã tạo 10 câu hỏi và mỗi câu có 4 options!');
   }
 }

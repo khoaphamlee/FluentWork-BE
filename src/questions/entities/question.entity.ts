@@ -38,6 +38,9 @@ export class Question {
     @Column('text')
     question_text: string;
 
+    @Column('text', { nullable: true })
+    explanation: string;
+
     @OneToMany(() => Option, (option) => option.question)
     options: Option[];
 

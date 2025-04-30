@@ -50,30 +50,29 @@ export class OptionsService {
     await this.optionRepository.remove(option);
   }
 
-  async createFakeData(): Promise<void> {
-    const questions = await this.questionRepository.find();
+//   async createFakeData(): Promise<void> {
+//     const questions = await this.questionRepository.find();
     
-    if (questions.length === 0) {
-      console.log('No questions found. Cannot create options.');
-      return;
-    }
+//     if (questions.length === 0) {
+//       console.log('No questions found. Cannot create options.');
+//       return;
+//     }
 
-    const fakeOptions: Option[] = []; 
+//     const fakeOptions: Option[] = []; 
 
-    // Tạo 10 option giả
-    for (let i = 0; i < 10; i++) {
-      const question = faker.helpers.arrayElement(questions); 
+//     // Tạo 10 option giả
+//     for (let i = 0; i < 10; i++) {
+//       const question = faker.helpers.arrayElement(questions); 
 
-      const option = new Option();
-      option.question = question;
-      option.option_text = faker.lorem.sentence();
-      option.is_correct = faker.datatype.boolean();
-      option.explanation = faker.lorem.sentence();  
+//       const option = new Option();
+//       option.question = question;
+//       option.option_text = faker.lorem.sentence();
+//       option.is_correct = faker.datatype.boolean();
 
-      fakeOptions.push(option);
-    }
+//       fakeOptions.push(option);
+//     }
 
-    await this.optionRepository.save(fakeOptions);
-    console.log('Fake options đã được thêm vào database!');
-  }
+//     await this.optionRepository.save(fakeOptions);
+//     console.log('Fake options đã được thêm vào database!');
+//   }
 }

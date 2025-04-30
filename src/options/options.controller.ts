@@ -50,7 +50,7 @@ export class OptionsController {
         return this.optionsService.remove(id);
     }
 
-    async onModuleInit() {
-        await this.optionsService.createFakeData();
-      } 
+    // async onModuleInit() {
+    //     await this.optionsService.createFakeData();
+    // } 
 }

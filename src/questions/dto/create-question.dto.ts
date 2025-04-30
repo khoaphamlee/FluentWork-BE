@@ -1,5 +1,7 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateOptionDto } from 'src/options/dto/create-option.dto';
+import { Type } from 'class-transformer';
 
 export class CreateQuestionDto {
     @ApiProperty({
@@ -41,4 +43,20 @@ export class CreateQuestionDto {
     @IsString()
     @IsNotEmpty()
     question_text: string;
+
+    @ApiProperty({
+        description: "The explanation of the question's answer itself",
+        type: String,
+    })
+    @IsOptional()
+    @IsString()
+    explanation?: string;
+
+    @ApiProperty({ type: [CreateOptionDto], description: 'List of 4 options' })
+    @IsArray()
+    @ArrayMinSize(4)
+    @ArrayMaxSize(4)
+    @ValidateNested({ each: true })
+    @Type(() => CreateOptionDto)
+    options: CreateOptionDto[];
 }

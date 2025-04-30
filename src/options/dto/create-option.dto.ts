@@ -1,8 +1,8 @@
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateOptionDto {
-  @IsNumber()
-  question_id: number;  
+//   @IsNumber()
+//   question_id: number;  
 
   @IsString()
   @MaxLength(255)
@@ -10,9 +10,4 @@ export class CreateOptionDto {
 
   @IsBoolean()
   is_correct: boolean; 
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  explanation?: string;
 }
