@@ -97,14 +97,11 @@ export class TestTemplatesController {
     })
     async getTestQuestionsByTemplate(@Param('id') id: number) {
         try {
-            // Gọi service để lấy danh sách câu hỏi theo template
             return await this.testTemplatesService.getTestQuestionsByTemplate(id);
         } catch (error) {
-            // Xử lý lỗi khi không tìm thấy testTemplate
             if (error.message === 'Test template not found') {
                 throw new NotFoundException(error.message);
             }
-            // Xử lý lỗi khác (nếu có)
             throw new InternalServerErrorException('Unexpected error occurred');
         }
     }

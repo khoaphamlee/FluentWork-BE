@@ -10,6 +10,7 @@ import {
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { Test } from 'src/tests/entities/test.entity';
+import { Question } from 'src/questions/entities/question.entity';
   
 @Entity({ name: 'test_templates' })
 export class TestTemplate {
@@ -47,9 +48,8 @@ export class TestTemplate {
     @Column({
         type: 'enum',
         enum: ['Beginner', 'Intermediate', 'Advanced'],
-        nullable: true,
     })
-    level: 'Beginner' | 'Intermediate' | 'Advanced' | null;
+    level: 'Beginner' | 'Intermediate' | 'Advanced';
   
     @Column({ default: false })
     is_active: boolean;
@@ -59,11 +59,11 @@ export class TestTemplate {
   
     @UpdateDateColumn()
     updated_at: Date;
-  
-    @OneToMany(() => TestQuestion, (question) => question.testTemplate)
-    questions: TestQuestion[];
 
-    @OneToOne(() => Test, (test) => test.testTemplate)
+    @OneToMany(() => Test, (test) => test.testTemplate)
     test: Test;
+
+    @OneToMany(() => Question, (question) => question.testTemplate) // Quan hệ với Question
+    questions: Question[];
 }
   

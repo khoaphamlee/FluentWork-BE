@@ -1,57 +1,71 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { CreateOptionDto } from 'src/options/dto/create-option.dto';
-import { Type } from 'class-transformer';
-
+import {
+    ArrayMaxSize,
+    ArrayMinSize,
+    IsArray,
+    IsEnum,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    ValidateNested,
+  } from 'class-validator';
+  import { ApiProperty } from '@nestjs/swagger';
+  import { CreateOptionDto } from 'src/options/dto/create-option.dto';
+  import { Type } from 'class-transformer';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { Topic } from 'src/enum/topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+  
 export class CreateQuestionDto {
     @ApiProperty({
-        description: 'The topic of the question (either Vocabulary or Grammar)',
-        enum: ['Vocabulary', 'Grammar'],
+      description: 'The topic of the question (either Vocabulary or Grammar)',
+      enum: Topic,
     })
-    @IsEnum(['Vocabulary', 'Grammar'])
-    topic: 'Vocabulary' | 'Grammar';
-
+    @IsEnum(Topic)
+    topic: Topic;
+  
     @ApiProperty({
-        description: 'The vocabulary topic, can be IT, Business, or Finance',
-        enum: ['IT', 'Business', 'Finance'],
-        required: false,
-    })
-    @IsOptional()
-    @IsEnum(['IT', 'Business', 'Finance'])
-    vocabulary_topic?: 'IT' | 'Business' | 'Finance';
-
-    @ApiProperty({
-        description: 'The grammar topic, can be Tense, Passive Voice, or Conditional Sentence',
-        enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
-        required: false,
+      description: 'The vocabulary topic',
+      enum: VocabularyTopic,
+      required: false,
     })
     @IsOptional()
-    @IsEnum(['Tense', 'Passive Voice', 'Conditional Sentence'])
-    grammar_topic?: 'Tense' | 'Passive Voice' | 'Conditional Sentence';
-
+    @IsEnum(VocabularyTopic)
+    vocabulary_topic?: VocabularyTopic;
+  
     @ApiProperty({
-        description: 'The level of the question (Beginner, Intermediate, or Advanced)',
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
+      description: 'The grammar topic',
+      enum: GrammarTopic,
+      required: false,
     })
-    @IsEnum(['Beginner', 'Intermediate', 'Advanced'])
-    level: 'Beginner' | 'Intermediate' | 'Advanced';
-
+    @IsOptional()
+    @IsEnum(GrammarTopic)
+    grammar_topic?: GrammarTopic;
+  
     @ApiProperty({
-        description: 'The text of the question itself',
-        type: String,
+      description: 'The level of the question (Beginner, Intermediate, or Advanced)',
+      enum: Level,
+    })
+    @IsEnum(Level)
+    level: Level;
+  
+    @ApiProperty({
+      description: 'The text of the question itself',
+      type: String,
     })
     @IsString()
     @IsNotEmpty()
     question_text: string;
-
+  
     @ApiProperty({
-        description: "The explanation of the question's answer itself",
-        type: String,
+      description: "The explanation of the question's answer",
+      type: String,
+      required: false,
     })
     @IsOptional()
     @IsString()
     explanation?: string;
-
+  
     @ApiProperty({ type: [CreateOptionDto], description: 'List of 4 options' })
     @IsArray()
     @ArrayMinSize(4)
@@ -60,3 +74,4 @@ export class CreateQuestionDto {
     @Type(() => CreateOptionDto)
     options: CreateOptionDto[];
 }
+  

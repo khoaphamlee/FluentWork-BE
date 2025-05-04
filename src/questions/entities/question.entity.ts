@@ -1,8 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
 import { Option } from 'src/options/entities/option.entity';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
-import { Test } from '@nestjs/testing';
 import { LessonQuestion } from 'src/lesson-questions/entities/lesson-question.entity';
+import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
+import { Topic } from 'src/enum/topic.enum';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+
+
 @Entity({ name: 'questions' })
 export class Question {
     @PrimaryGeneratedColumn()
@@ -10,30 +16,30 @@ export class Question {
 
     @Column({
         type: 'enum',
-        enum: ['Vocabulary', 'Grammar'],
+        enum: Topic,
     })
-    topic: 'Vocabulary' | 'Grammar';
+    topic: Topic;
 
     @Column({
         type: 'enum',
-        enum: ['IT', 'Business', 'Finance'],
+        enum: VocabularyTopic,
         nullable: true,
     })
-    vocabulary_topic: 'IT' | 'Business' | 'Finance' | null;
+    vocabulary_topic: VocabularyTopic | null;
 
     @Column({
         type: 'enum',
-        enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
+        enum: GrammarTopic,
         nullable: true,
     })
-    grammar_topic: 'Tense' | 'Passive Voice' | 'Conditional Sentence' | null;
-    
+    grammar_topic: GrammarTopic | null;
+
     @Column({
         type: 'enum',
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
-        default: 'Beginner',
+        enum: Level,
+        default: Level.BEGINNER,
     })
-    level: 'Beginner' | 'Intermediate' | 'Advanced';
+    level: Level;
 
     @Column('text')
     question_text: string;
@@ -49,4 +55,7 @@ export class Question {
 
     @OneToMany(() => LessonQuestion, (lessonQuestion) => lessonQuestion.question)
     lessonQuestion: LessonQuestion[];
+
+    @ManyToOne(() => TestTemplate, (testTemplate) => testTemplate.questions)
+    testTemplate: TestTemplate;
 }

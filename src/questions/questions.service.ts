@@ -8,6 +8,10 @@ import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { faker } from '@faker-js/faker';
 import { Option } from 'src/options/entities/option.entity';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { Topic } from 'src/enum/topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 
 @Injectable()
 export class QuestionsService {
@@ -45,23 +49,22 @@ export class QuestionsService {
   }
 
   async findAllWithOptions(filters?: {
-    topic?: 'Vocabulary' | 'Grammar';
-    vocabulary_topic?: 'IT' | 'Business' | 'Finance';
-    grammar_topic?: 'Tense' | 'Passive Voice' | 'Conditional Sentence';
-    level?: 'Beginner' | 'Intermediate' | 'Advanced';
+    topic?: Topic;
+    vocabulary_topic?: VocabularyTopic;
+    grammar_topic?: GrammarTopic;
+    level?: Level;
   }) {
     return this.questionRepository.find({
       where: {
-        ...(filters?.topic ? { topic: filters.topic } : {}),
-        ...(filters?.vocabulary_topic ? { vocabulary_topic: filters.vocabulary_topic } : {}),
-        ...(filters?.grammar_topic ? { grammar_topic: filters.grammar_topic } : {}),
-        ...(filters?.level ? { level: filters.level } : {}),
+        ...(filters?.topic && { topic: filters.topic }),
+        ...(filters?.vocabulary_topic && { vocabulary_topic: filters.vocabulary_topic }),
+        ...(filters?.grammar_topic && { grammar_topic: filters.grammar_topic }),
+        ...(filters?.level && { level: filters.level }),
       },
       relations: ['options'],
     });
   }
   
-
   async findOne(id: number) {
     const question = await this.questionRepository.findOne({
       where: { id },
@@ -87,10 +90,10 @@ export class QuestionsService {
   }
 
   async findAllFiltered(filters: {
-    topic?: 'Vocabulary' | 'Grammar',
-    vocabulary_topic?: 'IT' | 'Business' | 'Finance',
-    grammar_topic?: 'Tense' | 'Passive Voice' | 'Conditional Sentence',
-    level?: 'Beginner' | 'Intermediate' | 'Advanced',
+    topic?: Topic;
+    vocabulary_topic?: VocabularyTopic;
+    grammar_topic?: GrammarTopic;
+    level?: Level;
   }) {
     const queryBuilder = this.questionRepository.createQueryBuilder('question');
   
@@ -98,23 +101,29 @@ export class QuestionsService {
       queryBuilder.andWhere('question.topic = :topic', { topic: filters.topic });
     }
     if (filters.vocabulary_topic) {
-      queryBuilder.andWhere('question.vocabulary_topic = :vocabulary_topic', { vocabulary_topic: filters.vocabulary_topic });
+      queryBuilder.andWhere('question.vocabulary_topic = :vocabulary_topic', {
+        vocabulary_topic: filters.vocabulary_topic,
+      });
     }
     if (filters.grammar_topic) {
-      queryBuilder.andWhere('question.grammar_topic = :grammar_topic', { grammar_topic: filters.grammar_topic });
+      queryBuilder.andWhere('question.grammar_topic = :grammar_topic', {
+        grammar_topic: filters.grammar_topic,
+      });
     }
     if (filters.level) {
       queryBuilder.andWhere('question.level = :level', { level: filters.level });
     }
   
-    return queryBuilder.select([
-      'question.id',
-      'question.topic',
-      'question.vocabulary_topic',
-      'question.grammar_topic',
-      'question.level',
-      'question.question_text'
-    ]).getMany();
+    return queryBuilder
+      .select([
+        'question.id',
+        'question.topic',
+        'question.vocabulary_topic',
+        'question.grammar_topic',
+        'question.level',
+        'question.question_text',
+      ])
+      .getMany();
   }
   
 
@@ -141,50 +150,39 @@ export class QuestionsService {
   async createFakeData(): Promise<void> {
     for (let i = 0; i < 10; i++) {
       const question = new Question();
-
-      const topic = faker.helpers.arrayElement(['Vocabulary', 'Grammar']);
-      question.topic = topic as 'Vocabulary' | 'Grammar';
-
-      if (topic === 'Vocabulary') {
-        question.vocabulary_topic = faker.helpers.arrayElement(['IT', 'Business', 'Finance']) as
-          | 'IT'
-          | 'Business'
-          | 'Finance';
+  
+      const topic = faker.helpers.arrayElement(Object.values(Topic));
+      question.topic = topic;
+  
+      if (topic === Topic.VOCABULARY) {
+        question.vocabulary_topic = faker.helpers.arrayElement(Object.values(VocabularyTopic));
         question.grammar_topic = null;
       } else {
-        question.grammar_topic = faker.helpers.arrayElement([
-          'Tense',
-          'Passive Voice',
-          'Conditional Sentence',
-        ]) as 'Tense' | 'Passive Voice' | 'Conditional Sentence';
+        question.grammar_topic = faker.helpers.arrayElement(Object.values(GrammarTopic));
         question.vocabulary_topic = null;
       }
-
-      question.level = faker.helpers.arrayElement(['Beginner', 'Intermediate', 'Advanced']) as
-        | 'Beginner'
-        | 'Intermediate'
-        | 'Advanced';
-
+  
+      question.level = faker.helpers.arrayElement(Object.values(Level));
       question.question_text = faker.lorem.sentence();
       question.explanation = faker.lorem.sentence();
-
+  
       const savedQuestion = await this.questionRepository.save(question);
-
+  
       const correctIndex = faker.number.int({ min: 0, max: 3 });
       const options: Option[] = [];
-
+  
       for (let j = 0; j < 4; j++) {
         const option = new Option();
         option.option_text = faker.lorem.words(3);
         option.is_correct = j === correctIndex;
         option.question = savedQuestion;
-
+  
         options.push(option);
       }
-
+  
       await this.optionRepository.save(options);
     }
-
-    console.log('Đã tạo 10 câu hỏi và mỗi câu có 4 options!');
+  
+    console.log('✅ Đã tạo 10 câu hỏi và mỗi câu có 4 options!');
   }
 }

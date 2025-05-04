@@ -10,17 +10,20 @@ import {
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { Question } from 'src/questions/entities/question.entity';
+import { Test } from 'src/tests/entities/test.entity';
   
 @Entity({ name: 'test_questions' })
 export class TestQuestion {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @ManyToOne(() => TestTemplate, (template) => template.questions, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'test_template_id' })
-    testTemplate: TestTemplate;
-  
-    @OneToOne(() => TestAnswer, (answer) => answer.testQuestion)
+    @ManyToOne(() => Test, (test) => test.testQuestions, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'test_id' })
+    test: Test;
+
+    @OneToOne(() => TestAnswer, (answer) => answer.testQuestion, {
+        cascade: true,
+    })
     answer: TestAnswer;
 
     @ManyToOne(() => Question, (question) => question.testQuestion, {

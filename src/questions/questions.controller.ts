@@ -2,8 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { QuestionsService } from './questions.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Question } from './entities/question.entity';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { Topic } from 'src/enum/topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 
 @ApiTags('questions')
 @Controller('questions')
@@ -25,35 +29,53 @@ export class QuestionsController {
     @Get()
     @ApiOperation({ summary: 'Get all questions with optional filters' })
     @ApiResponse({
-        status: 200,
-        description: 'Successfully retrieved all questions.',
-        type: [Question],
+    status: 200,
+    description: 'Successfully retrieved all questions.',
+    type: [Question],
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
+    @ApiQuery({ name: 'topic', enum: Topic, required: false })
+    @ApiQuery({ name: 'vocabulary_topic', enum: VocabularyTopic, required: false })
+    @ApiQuery({ name: 'grammar_topic', enum: GrammarTopic, required: false })
+    @ApiQuery({ name: 'level', enum: Level, required: false })
     findAll(
-        @Query('topic') topic?: 'Vocabulary' | 'Grammar',
-        @Query('vocabulary_topic') vocabulary_topic?: 'IT' | 'Business' | 'Finance',
-        @Query('grammar_topic') grammar_topic?: 'Tense' | 'Passive Voice' | 'Conditional Sentence',
-        @Query('level') level?: 'Beginner' | 'Intermediate' | 'Advanced',
+    @Query('topic') topic?: Topic,
+    @Query('vocabulary_topic') vocabulary_topic?: VocabularyTopic,
+    @Query('grammar_topic') grammar_topic?: GrammarTopic,
+    @Query('level') level?: Level,
     ) {
-        return this.questionsService.findAllFiltered({ topic, vocabulary_topic, grammar_topic, level });
+    return this.questionsService.findAllFiltered({
+        topic,
+        vocabulary_topic,
+        grammar_topic,
+        level,
+    });
     }
 
     @Get('options')
     @ApiOperation({ summary: 'Get all questions with options, with optional filters' })
     @ApiResponse({
-        status: 200,
-        description: 'Successfully retrieved all questions with options.',
-        type: [Question],
+    status: 200,
+    description: 'Successfully retrieved all questions with options.',
+    type: [Question],
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
+    @ApiQuery({ name: 'topic', enum: Topic, required: false })
+    @ApiQuery({ name: 'vocabulary_topic', enum: VocabularyTopic, required: false })
+    @ApiQuery({ name: 'grammar_topic', enum: GrammarTopic, required: false })
+    @ApiQuery({ name: 'level', enum: Level, required: false })
     findAllWithOption(
-        @Query('topic') topic?: 'Vocabulary' | 'Grammar',
-        @Query('vocabulary_topic') vocabulary_topic?: 'IT' | 'Business' | 'Finance',
-        @Query('grammar_topic') grammar_topic?: 'Tense' | 'Passive Voice' | 'Conditional Sentence',
-        @Query('level') level?: 'Beginner' | 'Intermediate' | 'Advanced',
+    @Query('topic') topic?: Topic,
+    @Query('vocabulary_topic') vocabulary_topic?: VocabularyTopic,
+    @Query('grammar_topic') grammar_topic?: GrammarTopic,
+    @Query('level') level?: Level,
     ) {
-        return this.questionsService.findAllWithOptions({ topic, vocabulary_topic, grammar_topic, level });
+    return this.questionsService.findAllWithOptions({
+        topic,
+        vocabulary_topic,
+        grammar_topic,
+        level,
+    });
     }
 
     @Get(':id')

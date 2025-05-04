@@ -6,10 +6,11 @@ import { Test } from './entities/test.entity';
 import { User } from '../users/entities/user.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { TestTemplatesModule } from 'src/test-templates/test-templates.module';
+import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Test, User, TestTemplate]),
+    TypeOrmModule.forFeature([Test, User, TestTemplate, TestQuestion]),
     TestTemplatesModule,
   ],
   controllers: [TestsController],

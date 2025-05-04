@@ -10,6 +10,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { TestMistake } from 'src/test-mistakes/entities/test-mistake.entity';
+import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
   
 @Entity({ name: 'tests' })
 export class Test {
@@ -20,22 +21,18 @@ export class Test {
     @JoinColumn({ name: 'user_id' })
     user: User;
   
-    @OneToOne(() => TestTemplate)
+    @ManyToOne(() => TestTemplate)
     @JoinColumn({ name: 'test_template_id' })
     testTemplate: TestTemplate;
 
     @OneToMany(() => TestMistake, (mistake) => mistake.test, { cascade: true })
     testMistakes: TestMistake[];
 
+    @OneToMany(() => TestQuestion, (testQuestion) => testQuestion.test, { cascade: true })
+    testQuestions: TestQuestion[];
+
     @Column('float')
     score: number;
-  
-    @Column({
-      type: 'enum',
-      enum: ['Beginner', 'Intermediate', 'Advanced'],
-      default: 'Beginner'
-    })
-    level: 'Beginner' | 'Intermediate' | 'Advanced';
   
     @Column({ type: 'interval' })
     duration: string;

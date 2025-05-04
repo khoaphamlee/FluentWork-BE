@@ -11,5 +11,5 @@ export class UpdateTestQuestionDto {
     @IsOptional()
     @IsNumber()
     @IsPositive()
-    test_template_id?: number;
+    test_id?: number;
 }

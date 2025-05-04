@@ -6,6 +6,7 @@ import { UpdateTestQuestionDto } from './dto/update-test-question.dto';
 import { TestQuestion } from './entities/test-question.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { Question } from 'src/questions/entities/question.entity';
+import { Test } from 'src/tests/entities/test.entity';
 
 @Injectable()
 export class TestQuestionsService {
@@ -18,39 +19,37 @@ export class TestQuestionsService {
 
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+
+    @InjectRepository(Test)
+    private readonly testRepository: Repository<Test>,
   ) {}
 
   async create(createDto: CreateTestQuestionDto) {
-    const template = await this.testTemplateRepository.findOneBy({
-      id: createDto.test_template_id,
-    });
-  
-    const question = await this.questionRepository.findOneBy({
-      id: createDto.question_id,
-    });
-  
-    if (!template || !question) {
-      throw new NotFoundException('Template hoặc Question không tồn tại');
+    const test = await this.testRepository.findOneBy({ id: createDto.test_id });
+    const question = await this.questionRepository.findOneBy({ id: createDto.question_id });
+
+    if (!test || !question) {
+      throw new NotFoundException('Test hoặc Question không tồn tại');
     }
-  
+
     const newTestQuestion = this.testQuestionRepository.create({
-      testTemplate: template,
-      question: question,
+      test,
+      question,
     });
-  
+
     return await this.testQuestionRepository.save(newTestQuestion);
-  }  
+  }
 
   async findAll() {
     return await this.testQuestionRepository.find({
-      relations: ['question', 'question.options'],
+      relations: ['question', 'question.options', 'test'],
     });
   }
 
   async findOne(id: number) {
     const testQuestion = await this.testQuestionRepository.findOne({
       where: { id },
-      relations: ['question'],
+      relations: ['question', 'test'],
     });
 
     if (!testQuestion) {
@@ -63,7 +62,7 @@ export class TestQuestionsService {
   async update(id: number, updateDto: UpdateTestQuestionDto) {
     const testQuestion = await this.testQuestionRepository.findOne({
       where: { id },
-      relations: ['question', 'testTemplate'],
+      relations: ['question', 'test'],
     });
   
     if (!testQuestion) {
@@ -82,16 +81,16 @@ export class TestQuestionsService {
       testQuestion.question = question;
     }
   
-    if (updateDto.test_template_id) {
-      const template = await this.testTemplateRepository.findOne({
-        where: { id: updateDto.test_template_id },
+    if (updateDto.test_id) {
+      const test = await this.testRepository.findOne({
+        where: { id: updateDto.test_id },
       });
   
-      if (!template) {
-        throw new NotFoundException('Test template not found');
+      if (!test) {
+        throw new NotFoundException('Test not found');
       }
   
-      testQuestion.testTemplate = template;
+      testQuestion.test = test;
     }
   
     return await this.testQuestionRepository.save(testQuestion);
