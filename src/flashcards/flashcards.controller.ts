@@ -1,7 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { FlashcardsService } from './flashcards.service';
 import { CreateFlashcardDto } from './dto/create-flashcard.dto';
 import { UpdateFlashcardDto } from './dto/update-flashcard.dto';
+import { Flashcard } from './entities/flashcard.entity';
+import { Request } from '@nestjs/common';
 
 @Controller('flashcards')
 export class FlashcardsController {
@@ -13,20 +23,23 @@ export class FlashcardsController {
   }
 
   @Get()
-  findAll() {
+  findAll(): Promise<Flashcard[]> {
     return this.flashcardsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.flashcardsService.findOne(+id);
+  findOne(@Request() req, @Param('id') id: string) {
+    const requestedId = +id;
+    return this.flashcardsService.findOne(requestedId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFlashcardDto: UpdateFlashcardDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateFlashcardDto: UpdateFlashcardDto,
+  ) {
     return this.flashcardsService.update(+id, updateFlashcardDto);
   }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.flashcardsService.remove(+id);

@@ -1,12 +1,13 @@
 import { IsEnum, IsString, MaxLength } from 'class-validator';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 
 export class CreateFlashcardDto {
-  @IsEnum(['IT', 'Business', 'Finance'])
-  category: 'IT' | 'Business' | 'Finance';
+  @IsEnum(VocabularyTopic)
+  topic: VocabularyTopic;
 
   @IsString()
   @MaxLength(255)
-  term: string;
+  word: string;
 
   @IsString()
   definition: string;

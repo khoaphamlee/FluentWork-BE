@@ -1,26 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFlashcardDto } from './dto/create-flashcard.dto';
 import { UpdateFlashcardDto } from './dto/update-flashcard.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Flashcard } from './entities/flashcard.entity';
+import { Repository } from 'typeorm';
+import { MessageResponseDto } from 'src/common/dto/message-response.dto';
 
 @Injectable()
 export class FlashcardsService {
-  create(createFlashcardDto: CreateFlashcardDto) {
-    return 'This action adds a new flashcard';
+  constructor(
+    @InjectRepository(Flashcard)
+    private flashcardsRepository: Repository<Flashcard>,
+  ) {}
+  async create(createFlashcardDto: CreateFlashcardDto) {
+    const flashcard = this.flashcardsRepository.create(createFlashcardDto);
+    return await this.flashcardsRepository.save(flashcard);
   }
 
-  findAll() {
-    return `This action returns all flashcards`;
+  async findAll() {
+    const flashcards = await this.flashcardsRepository.find();
+    return flashcards;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} flashcard`;
+  async findOne(id: number) {
+    const flashcard = await this.flashcardsRepository.findOne({
+      where: { id },
+    });
+    if (!flashcard) {
+      throw new NotFoundException('Không tìm thấy thẻ flashcard');
+    }
+    return flashcard;
   }
 
-  update(id: number, updateFlashcardDto: UpdateFlashcardDto) {
-    return `This action updates a #${id} flashcard`;
+  async update(id: number, updateFlashcardDto: UpdateFlashcardDto) {
+    const flashcard = await this.flashcardsRepository.findOne({
+      where: { id },
+    });
+    if (!flashcard) {
+      throw new NotFoundException('Không tìm thấy thẻ flashcard');
+    }
+    const updateFlashcard = Object.assign(flashcard, updateFlashcardDto);
+    return await this.flashcardsRepository.save(updateFlashcard);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} flashcard`;
+  async remove(id: number) {
+    const flashcard = await this.flashcardsRepository.findOne({
+      where: { id },
+    });
+    if (!flashcard) {
+      throw new NotFoundException('Không tìm thấy thẻ flashcard');
+    }
+
+    const removedUser = await this.flashcardsRepository.remove(flashcard);
+    return new MessageResponseDto('Xóa flashcard thành công');
   }
 }
