@@ -19,10 +19,6 @@ import {
     @OneToOne(() => TestQuestion, (question) => question.answer, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'test_question_id' })
     testQuestion: TestQuestion;
-
-    @ManyToOne(() => User)
-    @JoinColumn({ name: 'user_id' })
-    user: User;
   
     @ManyToOne(() => Option)
     @JoinColumn({ name: 'option_id' })

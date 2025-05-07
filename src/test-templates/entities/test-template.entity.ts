@@ -11,6 +11,10 @@ import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { Test } from 'src/tests/entities/test.entity';
 import { Question } from 'src/questions/entities/question.entity';
+import { Level } from 'src/enum/level.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+import { GrammarPoint } from 'src/lessons/dto/create-lesson.dto';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
   
 @Entity({ name: 'test_templates' })
 export class TestTemplate {
@@ -27,29 +31,29 @@ export class TestTemplate {
         type: 'enum',
         enum: ['Vocabulary', 'Grammar', 'Mixed'],
     })
-    topic: 'Vocabulary' | 'Grammar' | 'Mixed';
+    type: 'Vocabulary' | 'Grammar' | 'Mixed';
 
     @Column({
         type: 'enum',
-        enum: ['IT', 'Business', 'Finance'],
+        enum: VocabularyTopic,
         array: true,
         nullable: true,
     })
-    vocabulary_topic: ('IT' | 'Business' | 'Finance')[] | null;
+    vocabulary_topic: VocabularyTopic[] | null;
 
     @Column({
         type: 'enum',
-        enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
+        enum: GrammarTopic,
         array: true,
         nullable: true,
     })
-    grammar_topic: ('Tense' | 'Passive Voice' | 'Conditional Sentence')[] | null;
+    grammar_topic: GrammarTopic[] | null;
 
     @Column({
         type: 'enum',
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        enum: ['Beginner', 'Intermediate', 'Advanced', 'All'],
     })
-    level: 'Beginner' | 'Intermediate' | 'Advanced';
+    level: 'Beginner' | 'Intermediate' | 'Advanced' | 'All';
   
     @Column({ default: false })
     is_active: boolean;
@@ -63,7 +67,7 @@ export class TestTemplate {
     @OneToMany(() => Test, (test) => test.testTemplate)
     test: Test;
 
-    @OneToMany(() => Question, (question) => question.testTemplate) // Quan hệ với Question
+    @OneToMany(() => Question, (question) => question.testTemplate) 
     questions: Question[];
 }
   

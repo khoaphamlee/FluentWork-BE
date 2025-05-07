@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { TestTemplate } from './entities/test-template.entity';
 import { CreateTestTemplateDto } from './dto/create-test-template.dto';
 import { UpdateTestTemplateDto } from './dto/update-test-template.dto';
@@ -21,7 +21,7 @@ export class TestTemplatesService {
     ) {}
 
     async create(createDto: CreateTestTemplateDto): Promise<TestTemplate> {
-        if (createDto.topic === "Mixed") {
+        if (createDto.type === "Mixed") {
             if (!createDto.vocabulary_topic || !createDto.grammar_topic) {
                 throw new BadRequestException("Both vocabulary_topic and grammar_topic must be provided");
             }
@@ -60,19 +60,6 @@ export class TestTemplatesService {
         }
         return { deleted: true };
     }
-
-    async getTemplateWithQuestions(testTemplateId: number): Promise<TestTemplate> {
-        const template = await this.testTemplateRepository.findOne({
-        where: { id: testTemplateId, is_active: true }, 
-        relations: ['questions', 'questions.question'],
-        });
-
-        if (!template) {
-        throw new NotFoundException(`Test Template with id ${testTemplateId} not found or inactive`);
-        }
-
-        return template;
-    }
   
     async getTestQuestionsByTemplate(id: number) {
         const testTemplate = await this.testTemplateRepository.findOne({
@@ -90,7 +77,7 @@ export class TestTemplatesService {
 
         query.andWhere('question.level = :level', { level: testTemplate.level });
         
-        if (testTemplate.topic === 'Mixed') {
+        if (testTemplate.type === 'Mixed') {
             if (testTemplate.vocabulary_topic && testTemplate.vocabulary_topic.length > 0) {
                 query.andWhere('question.vocabulary_topic IN (:...vocabularyTopics)', {
                     vocabularyTopics: testTemplate.vocabulary_topic,
@@ -103,13 +90,13 @@ export class TestTemplatesService {
                 });
             }
         } else {
-            if (testTemplate.topic === 'Vocabulary' && testTemplate.vocabulary_topic) {
+            if (testTemplate.type === 'Vocabulary' && testTemplate.vocabulary_topic) {
                 query.andWhere('question.vocabulary_topic IN (:...vocabularyTopics)', {
                     vocabularyTopics: testTemplate.vocabulary_topic,
                 });
             }
 
-            if (testTemplate.topic === 'Grammar' && testTemplate.grammar_topic) {
+            if (testTemplate.type === 'Grammar' && testTemplate.grammar_topic) {
                 query.andWhere('question.grammar_topic IN (:...grammarTopics)', {
                     grammarTopics: testTemplate.grammar_topic,
                 });
@@ -121,6 +108,49 @@ export class TestTemplatesService {
         return questions;
     }
 
-
-  
+    async getFilteredQuestionsForTemplate(templateId: number): Promise<Question[]> {
+        const template = await this.testTemplateRepository.findOne({
+            where: { id: templateId },
+        });
+    
+        if (!template) {
+            throw new NotFoundException(`Test template with id ${templateId} not found`);
+        }
+    
+        const query = this.questionRepository.createQueryBuilder('question');
+    
+        if (template.level && template.level !== 'All') {
+            query.andWhere('question.level = :level', { level: template.level });
+        }
+    
+        if (template.type === 'Mixed') {
+            query.andWhere(new Brackets(qb => {
+                const hasVocab = Array.isArray(template.vocabulary_topic) && template.vocabulary_topic.length > 0;
+                const hasGrammar = Array.isArray(template.grammar_topic) && template.grammar_topic.length > 0;
+    
+                if (hasVocab) {
+                    qb.where('question.vocabulary_topic IN (:...vocabTopics)', {
+                        vocabTopics: template.vocabulary_topic,
+                    });
+                }
+    
+                if (hasGrammar) {
+                    const method = hasVocab ? 'orWhere' : 'where';
+                    qb[method]('question.grammar_topic IN (:...grammarTopics)', {
+                        grammarTopics: template.grammar_topic,
+                    });
+                }
+            }));
+        } else if (template.type === 'Vocabulary' && Array.isArray(template.vocabulary_topic) && template.vocabulary_topic.length > 0) {
+            query.andWhere('question.vocabulary_topic IN (:...vocabTopics)', {
+                vocabTopics: template.vocabulary_topic,
+            });
+        } else if (template.type === 'Grammar' && Array.isArray(template.grammar_topic) && template.grammar_topic.length > 0) {
+            query.andWhere('question.grammar_topic IN (:...grammarTopics)', {
+                grammarTopics: template.grammar_topic,
+            });
+        }
+    
+        return await query.getMany();
+    }
 }

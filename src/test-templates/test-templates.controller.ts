@@ -23,8 +23,9 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ReturnTestTemplateDto } from './dto/return-test-template.dto';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+import { ReturnTestTemplateDto } from './dto/return-test-template.dto';
+import { Question } from 'src/questions/entities/question.entity';
   
 @ApiTags('Test Templates')
 //@ApiBearerAuth()
@@ -84,27 +85,20 @@ export class TestTemplatesController {
     }
 
     @Get(':id/questions')
-    @ApiOperation({ summary: 'Retrieve all questions for a test template by ID' })
-    @ApiOkResponse({
-        type: [TestQuestion],
-        description: 'List of questions related to the test template',
-    })
-    @ApiNotFoundResponse({
-        description: 'Test template not found',
-    })
-    @ApiInternalServerErrorResponse({
-        description: 'Unexpected error occurred',
-    })
-    async getTestQuestionsByTemplate(@Param('id') id: number) {
+    @ApiOperation({ summary: 'Get filtered questions by test template ID' })
+    async getFilteredQuestions(@Param('id') id: number) {
         try {
-            return await this.testTemplatesService.getTestQuestionsByTemplate(id);
+            const questions = await this.testTemplatesService.getFilteredQuestionsForTemplate(id);
+            return questions;
         } catch (error) {
-            if (error.message === 'Test template not found') {
-                throw new NotFoundException(error.message);
+            if (error instanceof NotFoundException) {
+                throw error;
             }
+            console.error(error);
             throw new InternalServerErrorException('Unexpected error occurred');
         }
     }
+
 
 }
   

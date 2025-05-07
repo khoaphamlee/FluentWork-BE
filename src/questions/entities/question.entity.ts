@@ -18,7 +18,7 @@ export class Question {
         type: 'enum',
         enum: Topic,
     })
-    topic: Topic;
+    type: Topic;
 
     @Column({
         type: 'enum',

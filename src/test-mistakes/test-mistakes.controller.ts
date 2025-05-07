@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { TestMistakesService } from './test-mistakes.service';
 import { CreateTestMistakeDto } from './dto/create-test-mistake.dto';
 import { UpdateTestMistakeDto } from './dto/update-test-mistake.dto';
@@ -7,9 +7,12 @@ import { UpdateTestMistakeDto } from './dto/update-test-mistake.dto';
 export class TestMistakesController {
   constructor(private readonly testMistakesService: TestMistakesService) {}
 
-  @Post()
-  create(@Body() createTestMistakeDto: CreateTestMistakeDto) {
-    return this.testMistakesService.create(createTestMistakeDto);
+  @Post(':userId')
+  async create(
+    @Param('userId') userId: number,
+    @Body() createTestMistakeDto: CreateTestMistakeDto,
+  ) {
+    return this.testMistakesService.create(createTestMistakeDto, userId);
   }
 
   @Get()
@@ -18,17 +21,29 @@ export class TestMistakesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.testMistakesService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const testMistake = await this.testMistakesService.findOne(+id);
+    if (!testMistake) {
+      throw new NotFoundException(`TestMistake with ID ${id} not found`);
+    }
+    return testMistake;
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTestMistakeDto: UpdateTestMistakeDto) {
-    return this.testMistakesService.update(+id, updateTestMistakeDto);
+  async update(@Param('id') id: string, @Body() updateTestMistakeDto: UpdateTestMistakeDto) {
+    const testMistake = await this.testMistakesService.update(+id, updateTestMistakeDto);
+    if (!testMistake) {
+      throw new NotFoundException(`TestMistake with ID ${id} not found`);
+    }
+    return testMistake;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.testMistakesService.remove(+id);
+  async remove(@Param('id') id: string) {
+    const result = await this.testMistakesService.remove(+id);
+    if (!result) {
+      throw new NotFoundException(`TestMistake with ID ${id} not found`);
+    }
+    return { message: 'TestMistake successfully deleted' };
   }
 }

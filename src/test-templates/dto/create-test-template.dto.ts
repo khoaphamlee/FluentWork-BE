@@ -1,4 +1,7 @@
 import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf, ArrayNotEmpty } from 'class-validator';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+
 
 export class CreateTestTemplateDto {
   @IsString()
@@ -10,25 +13,25 @@ export class CreateTestTemplateDto {
   description?: string;
 
   @IsEnum(['Vocabulary', 'Grammar', 'Mixed'])
-  topic: 'Vocabulary' | 'Grammar' | 'Mixed'; 
+  type: 'Vocabulary' | 'Grammar' | 'Mixed';
 
   @ValidateIf((o) => o.topic === 'Vocabulary' || o.topic === 'Mixed')
   @IsArray()
   @ArrayNotEmpty()
-  @IsEnum(['IT', 'Business', 'Finance'], { each: true })
-  @IsOptional()  
-  vocabulary_topic?: ('IT' | 'Business' | 'Finance')[];
+  @IsEnum(VocabularyTopic, { each: true })
+  @IsOptional()
+  vocabulary_topic?: VocabularyTopic[];
 
   @ValidateIf((o) => o.topic === 'Grammar' || o.topic === 'Mixed')
   @IsArray()
   @ArrayNotEmpty()
-  @IsEnum(['Tense', 'Passive Voice', 'Conditional Sentence'], { each: true })
-  @IsOptional()  
-  grammar_topic?: ('Tense' | 'Passive Voice' | 'Conditional Sentence')[];
+  @IsEnum(GrammarTopic, { each: true })
+  @IsOptional()
+  grammar_topic?: GrammarTopic[];
 
-  @IsEnum(['Beginner', 'Intermediate', 'Advanced'])
-  @IsOptional()  
-  level?: 'Beginner' | 'Intermediate' | 'Advanced';
+  @IsEnum(['Beginner', 'Intermediate', 'Advanced', 'All'])
+  @IsOptional()
+  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'All';
 
   @IsBoolean()
   @IsOptional()

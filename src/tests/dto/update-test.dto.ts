@@ -1,4 +1,6 @@
-import { IsOptional, IsNumber, IsDateString, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsOptional, IsNumber, IsDate, IsString, IsEnum } from 'class-validator';
+import { Level } from 'src/enum/level.enum';
 
 export class UpdateTestDto {
   @IsOptional()
@@ -6,11 +8,16 @@ export class UpdateTestDto {
   score?: number;
 
   @IsOptional()
+  @IsEnum(Level)  // Use the enum
+  level?: Level;
+
+  @IsOptional()
   @IsString()
   duration?: string;
 
   @IsOptional()
-  @IsDateString()
+  @Type(() => Date) // Add this for date conversion
+  @IsDate()
   test_date?: Date;
 
   @IsOptional()

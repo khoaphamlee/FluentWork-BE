@@ -5,9 +5,9 @@ export class CreateTestAnswerDto {
   @IsInt()
   test_question_id: number;
 
-  @IsString()
-  @IsNotEmpty()
-  answer: string;
+  @IsNumber()
+  @IsInt()
+  option_id: number;
 
   @IsBoolean()
   is_correct: boolean;

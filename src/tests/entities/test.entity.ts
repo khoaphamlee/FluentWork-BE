@@ -11,6 +11,7 @@ import { User } from '../../users/entities/user.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { TestMistake } from 'src/test-mistakes/entities/test-mistake.entity';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+import { Level } from 'src/enum/level.enum';
   
 @Entity({ name: 'tests' })
 export class Test {
@@ -33,6 +34,13 @@ export class Test {
 
     @Column('float')
     score: number;
+
+    @Column({
+            type: 'enum',
+            enum: Level,
+            default: Level.BEGINNER,
+        })
+    level: Level;
   
     @Column({ type: 'interval' })
     duration: string;

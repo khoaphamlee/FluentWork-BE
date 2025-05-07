@@ -1,45 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateTestTemplateDto } from './create-test-template.dto';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateIf, ArrayNotEmpty } from 'class-validator';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 
 export class ReturnTestTemplateDto {
-  @ApiProperty()
-  id: number;
-
-  @ApiProperty()
-  title: string;
-
-  @ApiProperty({ required: false })
-  description?: string;
-
-  @ApiProperty({ enum: ['Vocabulary', 'Grammar', 'Mixed'] })
-  topic: 'Vocabulary' | 'Grammar' | 'Mixed';
-
-  @ApiProperty({
-    type: [String],
-    enum: ['IT', 'Business', 'Finance'],
-    required: false,
-  })
-  vocabulary_topic?: ('IT' | 'Business' | 'Finance')[];
-
-  @ApiProperty({
-    type: [String],
-    enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
-    required: false,
-  })
-  grammar_topic?: ('Tense' | 'Passive Voice' | 'Conditional Sentence')[];
-
-  @ApiProperty({
-    type: [String],
-    enum: ['Beginner', 'Intermidiate', 'Advanced'],
-    required: false,
-  })
-  level?: ('Beginner' | 'Intermidiate' | 'Advanced');
-
-  @ApiProperty()
-  is_active: boolean;
-
-  @ApiProperty()
-  created_at: Date;
-
-  @ApiProperty()
-  updated_at: Date;
+    id: number;
+    title: string;
+    description?: string;
+    type: 'Vocabulary' | 'Grammar' | 'Mixed';
+    vocabulary_topic?: VocabularyTopic[] | null;
+    grammar_topic?: GrammarTopic[] | null;
+    level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'All';
+    is_active?: boolean;
+    created_at: Date;
+    updated_at: Date;
 }

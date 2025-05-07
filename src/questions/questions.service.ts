@@ -68,7 +68,7 @@ export class QuestionsService {
   async findOne(id: number) {
     const question = await this.questionRepository.findOne({
       where: { id },
-      select: ['id', 'topic', 'vocabulary_topic', 'grammar_topic', 'level', 'question_text'],
+      select: ['id', 'type', 'vocabulary_topic', 'grammar_topic', 'level', 'question_text'],
     });
   
     if (!question) {
@@ -152,7 +152,7 @@ export class QuestionsService {
       const question = new Question();
   
       const topic = faker.helpers.arrayElement(Object.values(Topic));
-      question.topic = topic;
+      question.type = topic;
   
       if (topic === Topic.VOCABULARY) {
         question.vocabulary_topic = faker.helpers.arrayElement(Object.values(VocabularyTopic));

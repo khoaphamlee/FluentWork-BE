@@ -6,6 +6,9 @@ import {
     JoinColumn,
   } from 'typeorm';
   import { Test } from 'src/tests/entities/test.entity';
+  import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+  import { Topic } from 'src/enum/topic.enum'; 
+  import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum'; 
   
   @Entity({ name: 'test_mistakes' })
   export class TestMistake {
@@ -18,23 +21,23 @@ import {
   
     @Column({
       type: 'enum',
-      enum: ['Vocabulary', 'Grammar'],
+      enum: Topic,
     })
-    type: 'Vocabulary' | 'Grammar';
+    type: Topic;
   
     @Column({
       type: 'enum',
-      enum: ['IT', 'Business', 'Finance'],
+      enum: VocabularyTopic,
       nullable: true,
     })
-    vocabulary_topic: 'IT' | 'Business' | 'Finance' | null;
+    vocabulary_topic: VocabularyTopic | null;
   
     @Column({
       type: 'enum',
-      enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
+      enum: GrammarTopic,
       nullable: true,
     })
-    grammar_topic: 'Tense' | 'Passive Voice' | 'Conditional Sentence' | null;
+    grammar_topic: GrammarTopic | null;
   
     @Column()
     mistake_count: number;

@@ -72,9 +72,6 @@ export class User {
     @OneToMany(() => LessonAnswer, (lessonAnswer) => lessonAnswer.user)
     lessonAnswers: LessonAnswer[];
 
-    @OneToMany(() => TestAnswer, (testAnswer) => testAnswer.user)
-    testAnswers: TestAnswer[];
-
     @OneToOne(() => LessonProgress, (learnerProgress) => learnerProgress.user)
     learnerProgress: LessonProgress[];
 
