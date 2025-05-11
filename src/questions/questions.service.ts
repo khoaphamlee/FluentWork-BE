@@ -56,7 +56,7 @@ export class QuestionsService {
   }) {
     return this.questionRepository.find({
       where: {
-        ...(filters?.type && { topic: filters.type }),
+        ...(filters?.type && { type: filters.type }),
         ...(filters?.vocabulary_topic && { vocabulary_topic: filters.vocabulary_topic }),
         ...(filters?.grammar_topic && { grammar_topic: filters.grammar_topic }),
         ...(filters?.level && { level: filters.level }),
@@ -98,7 +98,7 @@ export class QuestionsService {
     const queryBuilder = this.questionRepository.createQueryBuilder('question');
   
     if (filters.type) {
-      queryBuilder.andWhere('question.type = :type', { topic: filters.type });
+      queryBuilder.andWhere('question.type = :type', { type: filters.type });
     }
     if (filters.vocabulary_topic) {
       queryBuilder.andWhere('question.vocabulary_topic = :vocabulary_topic', {
