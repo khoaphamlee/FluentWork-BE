@@ -5,6 +5,9 @@ import { Lesson } from './entities/lesson.entity';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { Topic } from 'src/enum/topic.enum';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 
 @Injectable()
 export class LessonsService {
@@ -45,6 +48,47 @@ export class LessonsService {
     }
     return lesson;
   }
+
+    async findAllFiltered(filters: {
+    type?: Topic;
+    vocabulary_topic?: VocabularyTopic;
+    grammar_topic?: GrammarTopic;
+    level?: Level;
+    }): Promise<Lesson[]> {
+    const queryBuilder = this.lessonRepository.createQueryBuilder('lesson');
+
+    if (filters.type) {
+        queryBuilder.andWhere('lesson.type = :type', { type: filters.type });
+    }
+    if (filters.vocabulary_topic) {
+        queryBuilder.andWhere('lesson.vocabulary_topic = :vocabulary_topic', {
+        vocabulary_topic: filters.vocabulary_topic,
+        });
+    }
+    if (filters.grammar_topic) {
+        queryBuilder.andWhere('lesson.grammar_topic = :grammar_topic', {
+        grammar_topic: filters.grammar_topic,
+        });
+    }
+    if (filters.level) {
+        queryBuilder.andWhere('lesson.level = :level', {
+        level: filters.level,
+        });
+    }
+
+    return queryBuilder
+        .select([
+        'lesson.id',
+        'lesson.title',
+        'lesson.type',
+        'lesson.vocabulary_topic',
+        'lesson.grammar_topic',
+        'lesson.level',
+        'lesson.defaultOrder',
+        ])
+        .orderBy('lesson.defaultOrder', 'ASC')
+        .getMany();
+    }
 
   async update(id: number, updateLessonDto: UpdateLessonDto): Promise<Lesson> {
     const lesson = await this.findOne(id);

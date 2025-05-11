@@ -49,14 +49,14 @@ export class QuestionsService {
   }
 
   async findAllWithOptions(filters?: {
-    topic?: Topic;
+    type?: Topic;
     vocabulary_topic?: VocabularyTopic;
     grammar_topic?: GrammarTopic;
     level?: Level;
   }) {
     return this.questionRepository.find({
       where: {
-        ...(filters?.topic && { topic: filters.topic }),
+        ...(filters?.type && { topic: filters.type }),
         ...(filters?.vocabulary_topic && { vocabulary_topic: filters.vocabulary_topic }),
         ...(filters?.grammar_topic && { grammar_topic: filters.grammar_topic }),
         ...(filters?.level && { level: filters.level }),
@@ -90,15 +90,15 @@ export class QuestionsService {
   }
 
   async findAllFiltered(filters: {
-    topic?: Topic;
+    type?: Topic;
     vocabulary_topic?: VocabularyTopic;
     grammar_topic?: GrammarTopic;
     level?: Level;
   }) {
     const queryBuilder = this.questionRepository.createQueryBuilder('question');
   
-    if (filters.topic) {
-      queryBuilder.andWhere('question.topic = :topic', { topic: filters.topic });
+    if (filters.type) {
+      queryBuilder.andWhere('question.type = :type', { topic: filters.type });
     }
     if (filters.vocabulary_topic) {
       queryBuilder.andWhere('question.vocabulary_topic = :vocabulary_topic', {
@@ -117,7 +117,7 @@ export class QuestionsService {
     return queryBuilder
       .select([
         'question.id',
-        'question.topic',
+        'question.type',
         'question.vocabulary_topic',
         'question.grammar_topic',
         'question.level',
@@ -151,10 +151,10 @@ export class QuestionsService {
     for (let i = 0; i < 10; i++) {
       const question = new Question();
   
-      const topic = faker.helpers.arrayElement(Object.values(Topic));
-      question.type = topic;
+      const type = faker.helpers.arrayElement(Object.values(Topic));
+      question.type = type;
   
-      if (topic === Topic.VOCABULARY) {
+      if (type === Topic.VOCABULARY) {
         question.vocabulary_topic = faker.helpers.arrayElement(Object.values(VocabularyTopic));
         question.grammar_topic = null;
       } else {

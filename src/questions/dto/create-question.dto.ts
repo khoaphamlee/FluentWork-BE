@@ -8,9 +8,9 @@ import {
     IsString,
     ValidateNested,
   } from 'class-validator';
-  import { ApiProperty } from '@nestjs/swagger';
-  import { CreateOptionDto } from 'src/options/dto/create-option.dto';
-  import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { CreateOptionDto } from 'src/options/dto/create-option.dto';
+import { Type } from 'class-transformer';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 import { Level } from 'src/enum/level.enum';
 import { Topic } from 'src/enum/topic.enum';
@@ -22,7 +22,7 @@ export class CreateQuestionDto {
       enum: Topic,
     })
     @IsEnum(Topic)
-    topic: Topic;
+    type: Topic;
   
     @ApiProperty({
       description: 'The vocabulary topic',

@@ -34,18 +34,18 @@ export class QuestionsController {
     type: [Question],
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
-    @ApiQuery({ name: 'topic', enum: Topic, required: false })
+    @ApiQuery({ name: 'type', enum: Topic, required: false })
     @ApiQuery({ name: 'vocabulary_topic', enum: VocabularyTopic, required: false })
     @ApiQuery({ name: 'grammar_topic', enum: GrammarTopic, required: false })
     @ApiQuery({ name: 'level', enum: Level, required: false })
     findAll(
-    @Query('topic') topic?: Topic,
+    @Query('type') type?: Topic,
     @Query('vocabulary_topic') vocabulary_topic?: VocabularyTopic,
     @Query('grammar_topic') grammar_topic?: GrammarTopic,
     @Query('level') level?: Level,
     ) {
     return this.questionsService.findAllFiltered({
-        topic,
+        type,
         vocabulary_topic,
         grammar_topic,
         level,
@@ -60,18 +60,18 @@ export class QuestionsController {
     type: [Question],
     })
     @ApiResponse({ status: 400, description: 'Bad Request' })
-    @ApiQuery({ name: 'topic', enum: Topic, required: false })
+    @ApiQuery({ name: 'type', enum: Topic, required: false })
     @ApiQuery({ name: 'vocabulary_topic', enum: VocabularyTopic, required: false })
     @ApiQuery({ name: 'grammar_topic', enum: GrammarTopic, required: false })
     @ApiQuery({ name: 'level', enum: Level, required: false })
     findAllWithOption(
-    @Query('topic') topic?: Topic,
+    @Query('type') type?: Topic,
     @Query('vocabulary_topic') vocabulary_topic?: VocabularyTopic,
     @Query('grammar_topic') grammar_topic?: GrammarTopic,
     @Query('level') level?: Level,
     ) {
     return this.questionsService.findAllWithOptions({
-        topic,
+        type,
         vocabulary_topic,
         grammar_topic,
         level,
