@@ -13,7 +13,6 @@ import { Test } from 'src/tests/entities/test.entity';
 import { Question } from 'src/questions/entities/question.entity';
 import { Level } from 'src/enum/level.enum';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
-import { GrammarPoint } from 'src/lessons/dto/create-lesson.dto';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
   
 @Entity({ name: 'test_templates' })

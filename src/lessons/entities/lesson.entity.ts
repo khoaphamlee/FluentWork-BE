@@ -1,4 +1,8 @@
 import { Discussion } from 'src/discussions/entities/discussion.entity';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { Topic } from 'src/enum/topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { LearningPathLesson } from 'src/learning-path-lessons/entities/learning-path-lesson.entity';
 import { LearningPath } from 'src/learning-paths/entities/learning-path.entity';
 import { LessonProgress } from 'src/lesson-progresses/entities/lesson-progress.entity';
@@ -30,29 +34,29 @@ export class Lesson {
 
     @Column({
         type: 'enum',
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        enum: Level,
     })
-    level: 'Beginner' | 'Intermediate' | 'Advanced';
+    level: Level;
 
     @Column({
         type: 'enum',
-        enum: ['Vocabulary', 'Grammar'],
+        enum: Topic,
     })
-    type: 'Vocabulary' | 'Grammar';
+    type: Topic;
 
     @Column({
         type: 'enum',
-        enum: ['IT', 'Business', 'Finance'],
+        enum: VocabularyTopic,
         nullable: true,
     })
-    vocabulary_topic: 'IT' | 'Business' | 'Finance' | null;
+    vocabulary_topic: VocabularyTopic | null;
 
     @Column({
         type: 'enum',
-        enum: ['Tense', 'Passive Voice', 'Conditional Sentence'],
+        enum: GrammarTopic,
         nullable: true,
     })
-    grammar_topic: 'Tense' | 'Passive Voice' | 'Conditional Sentence' | null;
+    grammar_topic: GrammarTopic | null;
 
     @Column('text')
     content: string;
