@@ -12,6 +12,7 @@ import {
   import { Lesson } from 'src/lessons/entities/lesson.entity';
   import { User } from 'src/users/entities/user.entity';
 import { LearningPathLesson } from 'src/learning-path-lessons/entities/learning-path-lesson.entity';
+import { Level } from 'src/enum/level.enum';
   
   @Entity({ name: 'learning_paths' })
   export class LearningPath {
@@ -24,9 +25,9 @@ import { LearningPathLesson } from 'src/learning-path-lessons/entities/learning-
   
     @Column({
       type: 'enum',
-      enum: ['Beginner', 'Intermediate', 'Advanced'],
+      enum: Level,
     })
-    level: 'Beginner' | 'Intermediate' | 'Advanced';
+    level: Level;
   
     @Column({ length: 255 })
     title: string;
