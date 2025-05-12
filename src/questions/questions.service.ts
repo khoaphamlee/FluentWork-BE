@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateQuestionDto } from './dto/create-question.dto';
@@ -127,25 +127,74 @@ export class QuestionsService {
   }
   
 
+//   async update(id: number, updateQuestionDto: UpdateQuestionDto) {
+//     const question = await this.questionRepository.preload({
+//       id,
+//       ...updateQuestionDto,
+//     });
+//     if (!question) {
+//       throw new NotFoundException('Question not found');
+//     }
+//     return this.questionRepository.save(question);
+//   }
+
   async update(id: number, updateQuestionDto: UpdateQuestionDto) {
-    const question = await this.questionRepository.preload({
-      id,
-      ...updateQuestionDto,
+    const { options, ...questionData } = updateQuestionDto;
+
+    const question = await this.questionRepository.findOne({
+        where: { id },
+        relations: ['options'],
     });
+
     if (!question) {
-      throw new NotFoundException('Question not found');
+        throw new NotFoundException(`Question with id ${id} not found`);
     }
-    return this.questionRepository.save(question);
-  }
+
+    this.questionRepository.merge(question, questionData);
+    await this.questionRepository.save(question);
+
+    if (options && options.length > 0) {
+        for (const optionDto of options) {
+        if (!optionDto.id) {
+            throw new BadRequestException('Option id is required for update.');
+        }
+
+        const existingOption = await this.optionRepository.findOne({
+            where: { id: optionDto.id, question: { id } },
+        });
+
+        if (!existingOption) {
+            throw new NotFoundException(`Option with id ${optionDto.id} not found`);
+        }
+
+        this.optionRepository.merge(existingOption, optionDto);
+        await this.optionRepository.save(existingOption);
+        }
+    }
+
+    return await this.questionRepository.findOne({
+        where: { id },
+        relations: ['options'],
+    });
+    }
 
   async remove(id: number) {
-    const question = await this.questionRepository.findOne({ where: { id } });
+    const question = await this.questionRepository.findOne({
+        where: { id },
+        relations: ['options'],
+    });
+
     if (!question) {
-      throw new NotFoundException('Question not found');
+        throw new NotFoundException('Question not found');
     }
+
+    await this.optionRepository.remove(question.options);
+
     await this.questionRepository.remove(question);
-    return { message: 'Question deleted successfully' };
-  }
+
+    return { message: 'Question and associated options deleted successfully' };
+    }
+
 
   async createFakeData(): Promise<void> {
     for (let i = 0; i < 10; i++) {
