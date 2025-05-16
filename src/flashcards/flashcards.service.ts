@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Flashcard } from './entities/flashcard.entity';
 import { Repository } from 'typeorm';
 import { MessageResponseDto } from 'src/common/dto/message-response.dto';
+import { FindFlashcardsDto } from './dto/find-flashcard.dto';
 
 @Injectable()
 export class FlashcardsService {
@@ -17,9 +18,26 @@ export class FlashcardsService {
     return await this.flashcardsRepository.save(flashcard);
   }
 
-  async findAll() {
-    const flashcards = await this.flashcardsRepository.find();
-    return flashcards;
+  async findAll(filters: FindFlashcardsDto): Promise<Flashcard[]> {
+    const query = this.flashcardsRepository.createQueryBuilder('flashcard');
+
+    if (filters.topic) {
+      query.andWhere('flashcard.topic = :topic', { topic: filters.topic });
+    }
+
+    if (filters.word) {
+      query.andWhere('flashcard.word ILIKE :word', {
+        word: `%${filters.word}%`,
+      });
+    }
+
+    if (filters.definition) {
+      query.andWhere('flashcard.definition ILIKE :definition', {
+        definition: `%${filters.definition}%`,
+      });
+    }
+
+    return query.getMany();
   }
 
   async findOne(id: number) {
