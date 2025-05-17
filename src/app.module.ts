@@ -48,6 +48,7 @@ import { LessonQa } from './lesson-qas/entities/lesson-qa.entity';
 import { LessonQaAnswer } from './lesson-qa-answers/entities/lesson-qa-answer.entity';
 import { TestMistake } from './test-mistakes/entities/test-mistake.entity';
 import { UserMistake } from './user-mistakes/entities/user-mistake.entity';
+import { DashboardModule } from './dashboard/dashboard.module';
 console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
 
 @Module({
@@ -126,7 +127,8 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     TestMistakesModule,
     UserMistakesModule,
     LessonQasModule,
-    LessonQaAnswersModule
+    LessonQaAnswersModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [AppService],
