@@ -29,7 +29,7 @@ export class AuthService {
 
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
-      throw new Error('Email đã tồn tại');
+      throw new BadRequestException('Email đã tồn tại');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
