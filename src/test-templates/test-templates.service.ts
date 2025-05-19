@@ -153,4 +153,66 @@ export class TestTemplatesService {
     
         return await query.getMany();
     }
+
+    async getPlacementTestQuestions(templateId: number): Promise<Question[]> {
+    const template = await this.testTemplateRepository.findOne({
+        where: { id: templateId },
+    });
+
+    if (!template) {
+        throw new NotFoundException(`Test template with id ${templateId} not found`);
+    }
+
+    const levels = ['Beginner', 'Intermediate', 'Advanced'];
+    const vocabCounts = [2, 2, 1];
+    const grammarCounts = [2, 2, 1];
+
+    const finalQuestions: Question[] = [];
+
+    for (let i = 0; i < levels.length; i++) {
+        const level = levels[i];
+
+        // Lấy câu Vocabulary
+        const vocabQuestions = await this.questionRepository
+            .createQueryBuilder('question')
+            .where('question.level = :level', { level })
+            .andWhere('question.vocabulary_topic IN (:...vocabTopics)', {
+                vocabTopics: template.vocabulary_topic ?? [],
+            })
+            .andWhere('question.type = :type', { type: 'Vocabulary' }) // Nếu có field type
+            .limit(vocabCounts[i])
+            .orderBy('RANDOM()')
+            .getMany();
+
+        if (vocabQuestions.length < vocabCounts[i]) {
+            throw new Error(
+                `Not enough vocabulary questions for level ${level}. Needed ${vocabCounts[i]}, got ${vocabQuestions.length}`
+            );
+        }
+
+        // Lấy câu Grammar
+        const grammarQuestions = await this.questionRepository
+            .createQueryBuilder('question')
+            .where('question.level = :level', { level })
+            .andWhere('question.grammar_topic IN (:...grammarTopics)', {
+                grammarTopics: template.grammar_topic ?? [],
+            })
+            .andWhere('question.type = :type', { type: 'Grammar' }) // Nếu có field type
+            .limit(grammarCounts[i])
+            .orderBy('RANDOM()')
+            .getMany();
+
+        if (grammarQuestions.length < grammarCounts[i]) {
+            throw new Error(
+                `Not enough grammar questions for level ${level}. Needed ${grammarCounts[i]}, got ${grammarQuestions.length}`
+            );
+        }
+
+        finalQuestions.push(...vocabQuestions, ...grammarQuestions);
+    }
+
+    return finalQuestions;
+}
+
+
 }

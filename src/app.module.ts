@@ -91,7 +91,6 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
             TestAnswer,
             TestQuestion,
             TestTemplate,
-            LearningPath,
             LearningPathLesson,
             LessonAnswer,
             LessonQuestion,

@@ -5,7 +5,7 @@ import {
     NotFoundException,
   } from '@nestjs/common';
   import { InjectRepository } from '@nestjs/typeorm';
-  import { Repository } from 'typeorm';
+  import { In, Repository } from 'typeorm';
   import { CreateTestDto } from './dto/create-test.dto';
   import { UpdateTestDto } from './dto/update-test.dto';
   import { Test } from './entities/test.entity';
@@ -18,6 +18,9 @@ import { Level } from 'src/enum/level.enum';
 import { LearnerProfile } from 'src/learner-profiles/entities/learner-profile.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { Option } from 'src/options/entities/option.entity';
+import { SubmitTestDto } from './dto/submit-test.dto';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
   
 @Injectable()
 export class TestsService {
@@ -91,38 +94,86 @@ export class TestsService {
     }
   
     private async findOrCreateTemplate(dto: CreateTestDto): Promise<TestTemplate> {
-      let templateQuery = this.testTemplateRepository
-        .createQueryBuilder('template')
-        .where('template.level = :level', { level: dto.level })
-        .andWhere('template.topic = :topic', { topic: dto.type });
-  
-      if (dto.vocabulary_topic && dto.vocabulary_topic.length > 0) {
-        templateQuery.andWhere('template.vocabulary_topic = :vocabulary', {
-          vocabulary: dto.vocabulary_topic,
+        const sortedVocabulary = dto.vocabulary_topic ? [...dto.vocabulary_topic].sort() : null;
+        const sortedGrammar = dto.grammar_topic ? [...dto.grammar_topic].sort() : null;
+
+        let templateQuery = this.testTemplateRepository
+            .createQueryBuilder('template')
+            .where('template.level = :level', { level: dto.level })
+            .andWhere('template.type = :type', { type: dto.type });
+
+        if (sortedVocabulary?.length) {
+            templateQuery.andWhere('template.vocabulary_topic = :vocabulary', {
+                vocabulary: `{${sortedVocabulary.join(',')}}`,
+            });
+        } else {
+            templateQuery.andWhere('template.vocabulary_topic IS NULL');
+        }
+
+        if (sortedGrammar?.length) {
+            templateQuery.andWhere('template.grammar_topic = :grammar', {
+                grammar: `{${sortedGrammar.join(',')}}`,
+            });
+        } else {
+            templateQuery.andWhere('template.grammar_topic IS NULL');
+        }
+
+        let template = await templateQuery.getOne();
+
+        if (!template) {
+            const { title, description } = this.generateTemplateInfo(dto.level, dto.type);
+            template = this.testTemplateRepository.create({
+                level: dto.level,
+                type: dto.type,
+                vocabulary_topic: sortedVocabulary,
+                grammar_topic: sortedGrammar,
+                title,
+                description,
+            });
+            await this.testTemplateRepository.save(template);
+        }
+
+        return template;
+    }
+
+    async createPlacementTest(dto: CreateTestDto): Promise<Test> {
+        const user = await this.userRepository.findOneBy({ id: dto.userId });
+        if (!user) throw new NotFoundException('User not found');
+
+        dto.level = 'All';
+        dto.type = 'Mixed';
+        dto.vocabulary_topic = Object.values(VocabularyTopic);
+        dto.grammar_topic = Object.values(GrammarTopic);
+
+        const template = await this.findOrCreateTemplate(dto);
+
+        const test = this.testRepository.create({
+            user: { id: user.id },
+            testTemplate: template,
+            score: 0,
+            duration: dto.duration,
+            test_date: dto.test_date ?? new Date(),
+            total_correct_answer: 0,
+            total_incorrect_answer: 0,
         });
-      }
-  
-      if (dto.grammar_topic && dto.grammar_topic.length > 0) {
-        templateQuery.andWhere('template.grammar_topic = :grammar', {
-          grammar: dto.grammar_topic,
+        await this.testRepository.save(test);
+
+        const questions = await this.testTemplateService.getPlacementTestQuestions(template.id);
+
+        const testQuestions = questions.map((question) =>
+        this.testQuestionRepository.create({
+            test,
+            question,
+        }),
+        );
+        await this.testQuestionRepository.save(testQuestions);
+
+        const created = await this.testRepository.findOne({
+        where: { id: test.id },
+        relations: ['testQuestions', 'testQuestions.question'],
         });
-      }
-  
-      let template = await templateQuery.getOne();
-  
-      if (!template) {
-        const { title, description } = this.generateTemplateInfo(dto.level, dto.type);
-        template = this.testTemplateRepository.create({
-          level: dto.level,
-          type: dto.type,
-          vocabulary_topic: dto.vocabulary_topic,
-          grammar_topic: dto.grammar_topic,
-          title,
-          description,
-        });
-        await this.testTemplateRepository.save(template);
-      }
-      return template;
+        if (!created) throw new Error('Failed to load placement test');
+        return created;
     }
   
     async findAll(): Promise<Test[]> {
@@ -281,14 +332,84 @@ export class TestsService {
           }
           await this.learnerProfileRepository.save(learnerProfile);
         }
+
+        const submittedAnswers = await this.testAnswerRepository.find({
+            where: {
+                testQuestion: In(test.testQuestions.map((q) => q.id)),
+            },
+                relations: ['testQuestion', 'option'],
+            });
+
       
         return {
           message: 'Test submitted successfully',
           correctAnswers: correctCount,
           totalQuestions,
           updatedLevel: learnerProfile.level,
+          answers: submittedAnswers,
         };
       }
+
+      async submitPlacementTest(testId: number, dto: SubmitTestDto, userId: number) {
+        const test = await this.testRepository.findOne({
+            where: { id: testId },
+            relations: ['testQuestions', 'testQuestions.question'],
+        });
+
+        if (!test) throw new NotFoundException('Test not found');
+        if (test.user.id !== userId) throw new BadRequestException('User does not own this test');
+
+        const submittedAnswers = await Promise.all(
+            dto.answers.map(async (answer) => {
+            const testQuestion = await this.testQuestionRepository.findOne({
+                where: { id: answer.testQuestionId },
+                relations: ['question'],
+            });
+
+            const option = await this.optionRepository.findOne({
+                where: { id: answer.selectedOptionId },
+            });
+
+            if (!testQuestion || !option) return null;
+
+            return this.testAnswerRepository.save({
+                testQuestion,
+                option,
+            });
+            }),
+        );
+
+        const correctAnswers = submittedAnswers.filter(
+            (a) => a && a.option.is_correct,
+        ).length;
+
+        test.score = correctAnswers;
+        test.total_correct_answer = correctAnswers;
+        test.total_incorrect_answer = test.testQuestions.length - correctAnswers;
+        await this.testRepository.save(test);
+
+        const learnerProfile = await this.learnerProfileRepository.findOne({
+            where: { user_id: userId },
+        });
+
+        if (!learnerProfile) throw new NotFoundException('Learner profile not found');
+
+        if (correctAnswers >= 9) {
+            learnerProfile.level = Level.ADVANCED;
+        } else if (correctAnswers >= 7) {
+            learnerProfile.level = Level.INTERMEDIATE;
+        } else {
+            learnerProfile.level = Level.BEGINNER;
+        }
+
+        await this.learnerProfileRepository.save(learnerProfile);
+
+        return {
+            message: 'Placement test submitted and level assigned.',
+            score: correctAnswers,
+            level: learnerProfile.level,
+        };
+        }
   }
 
   
