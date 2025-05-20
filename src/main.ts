@@ -4,6 +4,7 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { EmptyBodyValidationPipe } from './common/pipes/empty-body-validation.pipe';
+import { DatabaseSeederService } from './seeding/database-seeder.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
   app.useGlobalInterceptors(new LoggingInterceptor()); // interceptor
+
+  const seeder = app.get(DatabaseSeederService);
+  await seeder.seed(); // <- seed trước khi app.listen()
+
   await app.listen(process.env.PORT ?? 3000);
   console.log('App running on http://localhost:3000');
 }

@@ -49,6 +49,7 @@ import { LessonQaAnswer } from './lesson-qa-answers/entities/lesson-qa-answer.en
 import { TestMistake } from './test-mistakes/entities/test-mistake.entity';
 import { UserMistake } from './user-mistakes/entities/user-mistake.entity';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { DatabaseSeederService } from './seeding/database-seeder.service';
 console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
 
 @Module({
@@ -63,12 +64,12 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
         const dbUsername = configService.get('DB_USERNAME');
         const dbPassword = configService.get('DB_PASSWORD');
         const dbName = configService.get('DB_NAME');
-        
+
         console.log('DB Host:', dbHost);
         console.log('DB Port:', dbPort);
         console.log('DB Username:', dbUsername);
         console.log('DB Name:', dbName);
-      
+
         return {
           type: 'postgres',
           host: dbHost,
@@ -76,7 +77,8 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
           username: dbUsername,
           password: dbPassword,
           database: dbName,
-          entities: [User,
+          entities: [
+            User,
             LearnerProfile,
             ExerciseAttempt,
             Test,
@@ -97,12 +99,11 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
             LessonQa,
             LessonQaAnswer,
             TestMistake,
-            UserMistake
+            UserMistake,
           ],
           synchronize: true,
         };
-      }
-      
+      },
     }),
     UsersModule,
     LearnerProfilesModule,
@@ -127,9 +128,9 @@ console.log('🧪 process.env.DB_NAME:', process.env.DB_NAME);
     UserMistakesModule,
     LessonQasModule,
     LessonQaAnswersModule,
-    DashboardModule
+    DashboardModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DatabaseSeederService],
 })
 export class AppModule {}
