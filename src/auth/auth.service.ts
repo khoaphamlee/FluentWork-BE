@@ -29,7 +29,7 @@ export class AuthService {
 
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
-      throw new BadRequestException('Email đã tồn tại');
+      throw new BadRequestException(['Email already exists']);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -41,27 +41,39 @@ export class AuthService {
       password_hash: hashedPassword,
       role: UserRole.Learner,
     });
-    const { created_at, updated_at, ...returnUser } = newUser;
-    return returnUser;
+
+    const { message: _, created_at, updated_at, ...returnUser } = newUser;
+
+    return {
+      message: ['User registered successfully'],
+      ...returnUser,
+    };
   }
 
-  async login(dto: LoginDto): Promise<{ access_token: string }> {
+  async login(
+    dto: LoginDto,
+  ): Promise<{ access_token: string; message: string[] }> {
     const { email, password } = dto;
+
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Email không tồn tại');
+    if (!user) {
+      throw new NotFoundException(['Email not found']);
+    }
 
     const user_password_hash = await this.usersService.getHashPassword(
       user.email,
     );
-
     if (!user_password_hash) {
-      throw new UnauthorizedException('Không tìm thấy mật khẩu người dùng');
+      throw new NotFoundException(['User password not found']);
     }
 
-    const sanitizedHash = user.password_hash.replace('$2y$', '$2a$');
+    const sanitizedHash = user.password_hash.startsWith('$2y$')
+      ? user.password_hash.replace('$2y$', '$2b$')
+      : user.password_hash;
+
     const isMatch = await bcrypt.compare(password, sanitizedHash);
     if (!isMatch) {
-      throw new UnauthorizedException('Mật khẩu không đúng');
+      throw new BadRequestException(['Incorrect password']);
     }
 
     const payload = {
@@ -71,6 +83,7 @@ export class AuthService {
     };
 
     return {
+      message: ['Login successful'],
       access_token: this.jwtService.sign(payload),
     };
   }
@@ -79,12 +92,12 @@ export class AuthService {
     const { email, newPassword, confirmPassword } = dto;
 
     if (newPassword !== confirmPassword) {
-      throw new BadRequestException('Mật khẩu xác nhận không khớp');
+      throw new BadRequestException(['Confirm password does not match']);
     }
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new NotFoundException('Email không tồn tại trong hệ thống');
+      throw new NotFoundException(['Email does not exist']);
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -92,6 +105,8 @@ export class AuthService {
 
     await this.usersRepository.save(user);
 
-    return { message: 'Đổi mật khẩu thành công' };
+    return {
+      message: ['Password changed successfully'],
+    };
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   Request,
@@ -29,7 +30,10 @@ export class UsersService {
     const user = this.usersRepository.create(createUserDto);
     const savedUser = await this.usersRepository.save(user);
     const { password_hash, ...returnUser } = savedUser;
-    return returnUser;
+    return {
+      message: ['User created successfully'],
+      ...returnUser,
+    };
   }
   // gọi và chỉ trả về trong code (lộ hash_password nếu trả về cho client)
   async getHashPassword(email: string) {
@@ -45,25 +49,34 @@ export class UsersService {
   async findAll() {
     const users = await this.usersRepository.find();
     const returnUsers = users.map(({ password_hash, ...rest }) => rest);
-    return returnUsers;
+    return {
+      message: ['List of users fetched successfully'],
+      users: returnUsers,
+    };
   }
 
   async findOne(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(['User not found']);
     }
     const { password_hash, ...returnUser } = user;
-    return returnUser;
+    return {
+      message: ['User fetched successfully'],
+      ...returnUser,
+    };
   }
 
   async getProfile(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(['User not found']);
     }
     const { password_hash, created_at, updated_at, ...returnUser } = user;
-    return returnUser;
+    return {
+      message: ['User profile fetched successfully'],
+      ...returnUser,
+    };
   }
 
   //
@@ -73,38 +86,49 @@ export class UsersService {
   ) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(['User not found']);
     }
     const updatedUser = Object.assign(user, updateProfileUserDto);
     await this.usersRepository.save(updatedUser);
     const { password_hash, created_at, updated_at, ...savedUser } = updatedUser;
-    return savedUser;
+    return {
+      message: ['User profile updated successfully'],
+      ...savedUser,
+    };
   }
 
   //
   async update(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(['User not found']);
     }
-    const updatedUser = Object.assign(user, updateUserDto);
-    return await this.usersRepository.save(updatedUser);
+
+    Object.assign(user, updateUserDto);
+
+    const saved = await this.usersRepository.save(user);
+    const { password_hash, ...returnUser } = saved;
+
+    return {
+      message: ['User updated successfully'],
+      ...returnUser,
+    };
   }
 
   async remove(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(['User not found']);
     }
 
     const removedUser = await this.usersRepository.remove(user);
-    return new MessageResponseDto('Xóa người dùng thành công');
+    return new MessageResponseDto('User removed successfully');
   }
 
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException(['User not found']);
     }
 
     const match = await bcrypt.compare(
@@ -112,11 +136,11 @@ export class UsersService {
       user.password_hash,
     );
     if (!match) {
-      throw new UnauthorizedException('Mật khẩu cũ không đúng');
+      throw new BadRequestException(['Old password is incorrect']);
     }
 
     user.password_hash = await bcrypt.hash(changePasswordDto.newPw, 10);
     await this.usersRepository.save(user);
-    return new MessageResponseDto('Mật khẩu đã thay đổi thành công');
+    return new MessageResponseDto('Password changed successfully');
   }
 }

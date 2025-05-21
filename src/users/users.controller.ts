@@ -49,9 +49,29 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy thông tin hồ sơ người dùng' })
   @ApiBearerAuth() // bảo vệ API bằng cách xác thực access_token
   @ApiResponse({
-    status: 201,
-    type: UserProfileDto,
-    description: 'Thông tin hồ sơ người dùng',
+    status: 200,
+    description: 'User profile fetched successfully',
+    schema: {
+      example: {
+        message: ['User profile fetched successfully'],
+        id: 1,
+        username: 'admin',
+        email: 'admin@example.com',
+        fullname: 'Administrator',
+        role: 'Admin',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        message: ['User not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
   })
   @UseGuards(JwtAuthGuard) // API chỉ cho phép truy cập nếu người dùng đã đăng nhập và gửi kèm access_token hợp lệ trong request.
   getProfile(@Request() req) {
@@ -62,9 +82,29 @@ export class UsersController {
   @ApiOperation({ summary: 'Cập nhật thông tin hồ sơ người dùng' })
   @ApiBearerAuth()
   @ApiResponse({
-    status: 201,
-    type: UserProfileDto,
-    description: 'Thông tin hồ sơ người dùng đã được cập nhật',
+    status: 200,
+    description: 'User profile updated successfully',
+    schema: {
+      example: {
+        message: ['User profile updated successfully'],
+        id: 1,
+        username: 'admin',
+        email: 'admin@example.com',
+        fullname: 'Admin',
+        role: 'Admin',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        message: ['User not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
   })
   @UseGuards(JwtAuthGuard)
   updateProfile(@Request() req, @Body() dto: UpdateUserProfileDto) {
@@ -75,9 +115,35 @@ export class UsersController {
   @ApiOperation({ summary: 'Thay đổi mật khẩu' })
   @ApiBearerAuth()
   @ApiResponse({
-    status: 201,
-    type: ChangePasswordSuccessDto,
-    description: 'Mật khẩu đã thay đổi',
+    status: 200,
+    description: 'Password changed successfully',
+    schema: {
+      example: {
+        message: ['Password changed successfully'],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Old password incorrect',
+    schema: {
+      example: {
+        message: ['Old password is incorrect'],
+        error: 'Bad Request',
+        statusCode: 401,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        message: ['User not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
   })
   @UseGuards(JwtAuthGuard)
   async changePassword(@Request() req, @Body() body: ChangePasswordDto) {
@@ -88,10 +154,22 @@ export class UsersController {
   @ApiOperation({ summary: 'Danh sách tất cả người dùng trong hệ thống' })
   @ApiBearerAuth()
   @ApiResponse({
-    status: 201,
-    type: UserDto,
-    isArray: true,
-    description: 'Danh sách người dùng',
+    status: 200,
+    description: 'List of users fetched successfully',
+    schema: {
+      example: {
+        message: ['List of users fetched successfully'],
+        users: [
+          {
+            id: 1,
+            username: 'admin',
+            email: 'admin@example.com',
+            fullname: 'Administrator',
+            role: 'Admin',
+          },
+        ],
+      },
+    },
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin) // Chỉ admin mới có thể truy cập vào API dưới
@@ -103,9 +181,29 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy thông tin người dùng trong hệ thống' })
   @ApiBearerAuth()
   @ApiResponse({
-    status: 201,
-    type: UserDto,
-    description: 'Người dùng',
+    status: 200,
+    description: 'User fetched successfully',
+    schema: {
+      example: {
+        message: ['User fetched successfully'],
+        id: 1,
+        username: 'admin',
+        email: 'admin@example.com',
+        fullname: 'Administrator',
+        role: 'Admin',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        message: ['User not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin)
@@ -119,8 +217,28 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiResponse({
     status: 201,
-    type: UserDto,
-    description: 'Người dùng',
+    description: 'User created successfully',
+    schema: {
+      example: {
+        message: ['User created successfully'],
+        id: 2,
+        username: 'newuser',
+        email: 'new@example.com',
+        fullname: 'New User',
+        role: 'Learner',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        message: ['Email must be a valid email'],
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
   })
   //Uncomment 2 dòng bên dưới để tạo Admin
   //@UseGuards(JwtAuthGuard, RolesGuard)
@@ -133,9 +251,29 @@ export class UsersController {
   @ApiOperation({ summary: 'Cập nhật người dùng trong hệ thống' })
   @ApiBearerAuth()
   @ApiResponse({
-    status: 201,
-    type: UserDto,
-    description: 'Người dùng',
+    status: 200,
+    description: 'User updated successfully',
+    schema: {
+      example: {
+        message: ['User updated successfully'],
+        id: 1,
+        username: 'updateduser',
+        email: 'updated@example.com',
+        fullname: 'Updated User',
+        role: 'Instructor',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        message: ['User not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
@@ -151,9 +289,24 @@ export class UsersController {
   @ApiOperation({ summary: 'Xóa người dùng trong hệ thống' })
   @ApiBearerAuth()
   @ApiResponse({
-    status: 201,
-    type: RemoveUserSuccessDto,
-    description: 'Người dùng',
+    status: 200,
+    description: 'User deleted successfully',
+    schema: {
+      example: {
+        message: ['User removed successfully'],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        message: ['User not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')

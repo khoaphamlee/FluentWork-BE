@@ -5,41 +5,112 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserProfileDto } from 'src/users/dto/user-profile-dto';
 
 @ApiTags('Auth')
-@Controller('auth') // <-- Bắt buộc phải có để định tuyến đúng
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Đăng ký tài khoản mới' })
+  @ApiOperation({ summary: 'Register a new account' })
   @ApiResponse({
     status: 201,
-    description: 'Tạo tài khoản thành công',
-    type: UserProfileDto,
+    description: 'User registered successfully',
+    schema: {
+      example: {
+        message: ['User registered successfully'],
+        id: 2,
+        username: 'newuser',
+        email: 'newuser@example.com',
+        fullname: 'New User',
+        role: 'Learner',
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Email đã tồn tại' })
+  @ApiResponse({
+    status: 400,
+    description: 'Email already exists',
+    schema: {
+      example: {
+        message: ['Email already exists'],
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
+  })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Đăng nhập' })
+  @ApiOperation({ summary: 'Login' })
   @ApiResponse({
     status: 200,
-    description: 'Đăng nhập thành công, trả về access_token',
+    description: 'Login successful, return access_token',
     schema: {
       example: {
+        message: ['Login successful'],
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Sai email hoặc mật khẩu' })
+  @ApiResponse({
+    status: 400,
+    description: 'Incorrect password',
+    schema: {
+      example: {
+        message: ['Incorrect password'],
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Email not found',
+    schema: {
+      example: {
+        message: ['Email not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Post('forgot-password')
-  @ApiOperation({ summary: 'Quên mật khẩu - Đổi mật khẩu mới qua email' })
-  @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
+  @ApiOperation({ summary: 'Forgot password - set new password by email' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    schema: {
+      example: {
+        message: ['Password changed successfully'],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Confirm password does not match',
+    schema: {
+      example: {
+        message: ['Confirm password does not match'],
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Email does not exist',
+    schema: {
+      example: {
+        message: ['Email does not exist'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
