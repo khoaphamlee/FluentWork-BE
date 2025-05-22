@@ -35,7 +35,17 @@ export class DatabaseSeederService {
     await this.seedBusinessFlashcards();
     await this.seedFinanceFlashcards();
 
-    await this.seedFinanceLessons();
+    await this.seedBeginnerFinanceLessons();
+    await this.seedIntermediateFinanceLessons();
+    await this.seedAdvancedFinanceLessons();
+
+    await this.seedBeginnerITLessons();
+    await this.seedIntermediateITLessons();
+    await this.seedAdvancedITLessons();
+
+    await this.seedBeginnerBusinessLessons();
+    await this.seedIntermediateBusinessLessons();
+    await this.seedAdvancedBusinessLessons();
   }
 
   async seedMockUser() {
@@ -304,13 +314,15 @@ export class DatabaseSeederService {
     console.log(`✅ Seeded ${data.length} Finance flashcards`);
   }
 
-  async seedFinanceLessons() {
+  async seedBeginnerFinanceLessons() {
     const count = await this.lessonRepository.count({
-      where: { vocabulary_topic: VocabularyTopic.FINANCE },
+      where: { vocabulary_topic: VocabularyTopic.FINANCE,
+                level: Level.BEGINNER
+       },
     });
 
     if (count > 0) {
-      console.log('ℹ️ Finance lessons already seeded');
+      console.log('ℹ️ Beginner Finance lessons already seeded');
       return;
     }
 
@@ -329,5 +341,237 @@ export class DatabaseSeederService {
 
     await this.lessonRepository.insert(lessons);
     console.log(`✅ Seeded ${lessons.length} finance lessons`);
+  }
+
+  async seedIntermediateFinanceLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.FINANCE,
+                level: Level.INTERMEDIATE
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Intermediate Finance lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'Finance Vocabulary Intermediates',
+        description: 'Learn the core vocabulary used in finance.',
+        level: Level.INTERMEDIATE,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.FINANCE,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic financial terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} finance lessons`);
+  }
+
+  async seedAdvancedFinanceLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.FINANCE,
+                level: Level.ADVANCED
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Advanced Finance lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'Finance Vocabulary Advanceds',
+        description: 'Learn the core vocabulary used in finance.',
+        level: Level.ADVANCED,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.FINANCE,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic financial terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} finance lessons`);
+  }
+
+  async seedBeginnerITLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.INFORMATION_TECHNOLOGY,
+                level: Level.BEGINNER
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Beginner IT lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'IT Vocabulary Beginners',
+        description: 'Learn the core vocabulary used in IT.',
+        level: Level.BEGINNER,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.INFORMATION_TECHNOLOGY,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic IT terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} IT lessons`);
+  }
+
+  async seedIntermediateITLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.INFORMATION_TECHNOLOGY,
+                level: Level.INTERMEDIATE
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Intermediate IT lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'IT Vocabulary Beginners',
+        description: 'Learn the core vocabulary used in IT.',
+        level: Level.INTERMEDIATE,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.INFORMATION_TECHNOLOGY,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic IT terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} IT lessons`);
+  }
+
+  async seedAdvancedITLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.INFORMATION_TECHNOLOGY,
+                level: Level.ADVANCED
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Advanced IT lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'IT Vocabulary Beginners',
+        description: 'Learn the core vocabulary used in IT.',
+        level: Level.ADVANCED,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.INFORMATION_TECHNOLOGY,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic IT terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} IT lessons`);
+  }
+
+  async seedBeginnerBusinessLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.BUSINESS,
+                level: Level.BEGINNER
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Beginner Business lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'Business Vocabulary Beginners',
+        description: 'Learn the core vocabulary used in Business.',
+        level: Level.BEGINNER,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.BUSINESS,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic Business terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} Business lessons`);
+  }
+
+  async seedIntermediateBusinessLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.BUSINESS,
+                level: Level.INTERMEDIATE
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Intermediate Business lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'Business Vocabulary Beginners',
+        description: 'Learn the core vocabulary used in Business.',
+        level: Level.INTERMEDIATE,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.BUSINESS,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic Business terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} Business lessons`);
+  }
+
+  async seedAdvancedBusinessLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.BUSINESS,
+                level: Level.ADVANCED
+       },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Advanced Business lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'Business Vocabulary Beginners',
+        description: 'Learn the core vocabulary used in Business.',
+        level: Level.ADVANCED,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.BUSINESS,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic Business terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} Business lessons`);
   }
 }
