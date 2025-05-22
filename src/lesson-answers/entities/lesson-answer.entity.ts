@@ -4,6 +4,8 @@ import {
     Column,
     ManyToOne,
     JoinColumn,
+    OneToOne,
+    CreateDateColumn,
   } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { LessonQuestion } from 'src/lesson-questions/entities/lesson-question.entity';
@@ -14,22 +16,18 @@ export class LessonAnswer {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @ManyToOne(() => User, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' })
-    user: User;
-  
     @ManyToOne(() => LessonQuestion, (lessonQuestion) => lessonQuestion.lessonAnswers, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'lesson_question_id' })
     lessonQuestion: LessonQuestion;
-  
-    @ManyToOne(() => Option, (option) => option.lessonAnswers, { onDelete: 'CASCADE' })
+
+    @ManyToOne(() => Option)
     @JoinColumn({ name: 'option_id' })
     option: Option;
   
-    @Column({ type: 'boolean' })
+    @Column({ default: false })
     is_correct: boolean;
   
-    @Column({ type: 'timestamp' })
-    answered_at: Date;
+    @CreateDateColumn({ name: 'answered_at' })
+    answeredAt: Date;
 }
   

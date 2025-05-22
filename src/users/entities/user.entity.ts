@@ -69,9 +69,6 @@ export class User {
     @OneToOne(() => LearningPath, (learningPath) => learningPath)
     learningPath: LearningPath;
 
-    @OneToMany(() => LessonAnswer, (lessonAnswer) => lessonAnswer.user)
-    lessonAnswers: LessonAnswer[];
-
     @OneToOne(() => LessonProgress, (learnerProgress) => learnerProgress.user)
     learnerProgress: LessonProgress[];
 

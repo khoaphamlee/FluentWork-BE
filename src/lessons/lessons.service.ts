@@ -8,12 +8,20 @@ import { Topic } from 'src/enum/topic.enum';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 import { Level } from 'src/enum/level.enum';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+import { LessonQuestion } from 'src/lesson-questions/entities/lesson-question.entity';
+import { Question } from 'src/questions/entities/question.entity';
 
 @Injectable()
 export class LessonsService {
   constructor(
     @InjectRepository(Lesson)
     private readonly lessonRepository: Repository<Lesson>,
+
+    @InjectRepository(Question)
+    private readonly questionRepository: Repository<Question>,
+
+    @InjectRepository(LessonQuestion)
+    private readonly lessonQuestionRepository: Repository<LessonQuestion>,
   ) {}
 
   async create(createLessonDto: CreateLessonDto): Promise<Lesson> {
@@ -33,8 +41,22 @@ export class LessonsService {
       ...createLessonDto,
       defaultOrder: count + 1,
     });
+    
+    const savedLesson = await this.lessonRepository.save(lesson);
+
+    await this.generateQuestionsForLesson(savedLesson.id);
   
-    return await this.lessonRepository.save(lesson);
+    const lessonWithQuestions = await this.lessonRepository.findOne({
+        where: { id: savedLesson.id },
+        relations: ['lessonQuestions', 'lessonQuestions.question'],
+    });
+
+    if (!lessonWithQuestions) {
+        throw new NotFoundException(`Lesson with ID ${savedLesson.id} not found after creation`);
+    }
+
+    return lessonWithQuestions;
+
   }
 
   async findAll(): Promise<Lesson[]> {
@@ -102,4 +124,40 @@ export class LessonsService {
       throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
   }
+
+  async generateQuestionsForLesson(lessonId: number): Promise<void> {
+    const lesson = await this.lessonRepository.findOne({ where: { id: lessonId } });
+
+    if (!lesson) {
+        throw new NotFoundException(`Lesson with ID ${lessonId} not found`);
+    }
+
+    const where: any = {
+        type: lesson.type,
+        level: lesson.level,
+    };
+
+    if (lesson.type === Topic.VOCABULARY) {
+        where.vocabulary_topic = lesson.vocabulary_topic;
+    } else if (lesson.type === Topic.GRAMMAR) {
+        where.grammar_topic = lesson.grammar_topic;
+    }
+
+    const questions = await this.questionRepository.find({
+        where,
+        take: 5,
+    });
+
+    if (questions.length < 5) {
+        throw new Error(`Not enough questions. Need 5, got ${questions.length}`);
+    }
+
+    for (const question of questions) {
+        await this.lessonQuestionRepository.save({
+        lesson,
+        question,
+        });
+    }
+}
+
 }

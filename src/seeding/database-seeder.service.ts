@@ -7,6 +7,10 @@ import { Flashcard } from 'src/flashcards/entities/flashcard.entity';
 import { Repository } from 'typeorm';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { User } from 'src/users/entities/user.entity';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { Level } from 'src/enum/level.enum';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
+import { Topic } from 'src/enum/topic.enum';
 
 @Injectable()
 export class DatabaseSeederService {
@@ -16,6 +20,8 @@ export class DatabaseSeederService {
     private readonly flashcardsRepository: Repository<Flashcard>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Lesson)
+    private readonly lessonRepository: Repository<Lesson>,
   ) {}
 
   async seed() {
@@ -28,6 +34,8 @@ export class DatabaseSeederService {
     await this.seedITFlashcards();
     await this.seedBusinessFlashcards();
     await this.seedFinanceFlashcards();
+
+    await this.seedFinanceLessons();
   }
 
   async seedMockUser() {
@@ -294,5 +302,32 @@ export class DatabaseSeederService {
 
     await this.flashcardsRepository.insert(data);
     console.log(`✅ Seeded ${data.length} Finance flashcards`);
+  }
+
+  async seedFinanceLessons() {
+    const count = await this.lessonRepository.count({
+      where: { vocabulary_topic: VocabularyTopic.FINANCE },
+    });
+
+    if (count > 0) {
+      console.log('ℹ️ Finance lessons already seeded');
+      return;
+    }
+
+    const lessons = [
+      {
+        defaultOrder: 1,
+        title: 'Finance Vocabulary Basics',
+        description: 'Learn the core vocabulary used in finance.',
+        level: Level.BEGINNER,
+        type: Topic.VOCABULARY,
+        vocabulary_topic: VocabularyTopic.FINANCE,
+        grammar_topic: null,
+        content: '<p>This lesson introduces basic financial terms like asset, liability, and equity.</p>',
+      },
+    ];
+
+    await this.lessonRepository.insert(lessons);
+    console.log(`✅ Seeded ${lessons.length} finance lessons`);
   }
 }

@@ -126,7 +126,7 @@ export class QuestionsController {
         return this.questionsService.remove(+id);
     }
 
-    // async onModuleInit() {
-    //     await this.questionsService.createFakeData();
-    // }
+    async onModuleInit() {
+        await this.questionsService.createFakeData();
+    }
 }
