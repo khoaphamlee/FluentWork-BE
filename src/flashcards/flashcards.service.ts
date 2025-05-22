@@ -15,10 +15,19 @@ export class FlashcardsService {
   ) {}
   async create(createFlashcardDto: CreateFlashcardDto) {
     const flashcard = this.flashcardsRepository.create(createFlashcardDto);
-    return await this.flashcardsRepository.save(flashcard);
+    const saved = await this.flashcardsRepository.save(flashcard);
+
+    const { ...returnFlashcard } = saved;
+
+    return {
+      message: ['Flashcard created successfully'],
+      ...returnFlashcard,
+    };
   }
 
-  async findAll(filters: FindFlashcardsDto): Promise<Flashcard[]> {
+  async findAll(
+    filters: FindFlashcardsDto,
+  ): Promise<{ message: string[]; flashcards: Flashcard[] }> {
     const query = this.flashcardsRepository.createQueryBuilder('flashcard');
 
     if (filters.topic) {
@@ -37,39 +46,58 @@ export class FlashcardsService {
       });
     }
 
-    return query.getMany();
+    const flashcards = await query.getMany();
+
+    return {
+      message: ['Flashcards fetched successfully'],
+      flashcards,
+    };
   }
 
   async findOne(id: number) {
     const flashcard = await this.flashcardsRepository.findOne({
       where: { id },
     });
+
     if (!flashcard) {
-      throw new NotFoundException('Không tìm thấy thẻ flashcard');
+      throw new NotFoundException(['Flashcard not found']);
     }
-    return flashcard;
+
+    return {
+      message: ['Flashcard fetched successfully'],
+      ...flashcard,
+    };
   }
 
   async update(id: number, updateFlashcardDto: UpdateFlashcardDto) {
     const flashcard = await this.flashcardsRepository.findOne({
       where: { id },
     });
+
     if (!flashcard) {
-      throw new NotFoundException('Không tìm thấy thẻ flashcard');
+      throw new NotFoundException(['Flashcard not found']);
     }
-    const updateFlashcard = Object.assign(flashcard, updateFlashcardDto);
-    return await this.flashcardsRepository.save(updateFlashcard);
+
+    const updatedFlashcard = Object.assign(flashcard, updateFlashcardDto);
+    const saved = await this.flashcardsRepository.save(updatedFlashcard);
+
+    return {
+      message: ['Flashcard updated successfully'],
+      ...saved,
+    };
   }
 
   async remove(id: number) {
     const flashcard = await this.flashcardsRepository.findOne({
       where: { id },
     });
+
     if (!flashcard) {
-      throw new NotFoundException('Không tìm thấy thẻ flashcard');
+      throw new NotFoundException(['Flashcard not found']);
     }
 
-    const removedUser = await this.flashcardsRepository.remove(flashcard);
-    return new MessageResponseDto('Xóa flashcard thành công');
+    await this.flashcardsRepository.remove(flashcard);
+
+    return new MessageResponseDto('Flashcard removed successfully');
   }
 }

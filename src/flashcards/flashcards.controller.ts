@@ -28,7 +28,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 
 @ApiTags('Flashcards')
-@ApiBearerAuth() // Cho biết các API yêu cầu Bearer token
+@ApiBearerAuth()
 @Controller('flashcards')
 export class FlashcardsController {
   constructor(private readonly flashcardsService: FlashcardsService) {}
@@ -36,90 +36,188 @@ export class FlashcardsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin, UserRole.Instructor)
-  @ApiOperation({ summary: 'Tạo flashcard mới' })
+  @ApiOperation({ summary: 'Create a new flashcard' })
   @ApiResponse({
     status: 201,
-    description: 'Flashcard đã được tạo thành công.',
-    type: Flashcard,
+    description: 'Flashcard created successfully',
+    schema: {
+      example: {
+        message: ['Flashcard created successfully'],
+        id: 1,
+        word: 'cloud',
+        definition: 'a visible mass of condensed water vapor',
+        topic: 'Weather',
+      },
+    },
   })
-  @ApiResponse({ status: 403, description: 'Không có quyền tạo flashcard.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    schema: {
+      example: {
+        message: ['Access denied'],
+        error: 'Forbidden',
+        statusCode: 403,
+      },
+    },
+  })
   create(@Body() createFlashcardDto: CreateFlashcardDto) {
     return this.flashcardsService.create(createFlashcardDto);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Tìm kiếm danh sách flashcard theo từ khóa' })
+  @ApiOperation({ summary: 'Search flashcards by filters' })
   @ApiQuery({
     name: 'topic',
     enum: VocabularyTopic,
     required: false,
-    description: 'Chủ đề từ vựng',
+    description: 'Vocabulary topic',
   })
   @ApiQuery({
     name: 'word',
     required: false,
-    description: 'Từ cần tìm kiếm (tìm kiếm chính xác hoặc gần đúng)',
+    description: 'Search by word',
   })
   @ApiQuery({
     name: 'definition',
     required: false,
-    description: 'Định nghĩa chứa từ khóa (full-text search)',
+    description: 'Search by definition (partial match)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Danh sách flashcard tìm được.',
-    type: [Flashcard],
+    description: 'List of matched flashcards',
+    schema: {
+      example: {
+        message: ['Flashcards fetched successfully'],
+        flashcards: [
+          {
+            id: 1,
+            word: 'cloud',
+            definition: 'a visible mass of condensed water vapor',
+            topic: 'Weather',
+          },
+        ],
+      },
+    },
   })
   findAll(
     @Query('topic') topic?: VocabularyTopic,
     @Query('word') word?: string,
     @Query('definition') definition?: string,
-  ): Promise<Flashcard[]> {
+  ) {
     return this.flashcardsService.findAll({ topic, word, definition });
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Lấy thông tin chi tiết của một flashcard' })
+  @ApiOperation({ summary: 'Get flashcard by ID' })
   @ApiResponse({
     status: 200,
-    description: 'Flashcard tìm thấy.',
-    type: Flashcard,
+    description: 'Flashcard found',
+    schema: {
+      example: {
+        message: ['Flashcard fetched successfully'],
+        id: 1,
+        word: 'cloud',
+        definition: 'a visible mass of condensed water vapor',
+        topic: 'Weather',
+      },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy flashcard.' })
-  findOne(@Request() req, @Param('id') id: string) {
-    const requestedId = +id;
-    return this.flashcardsService.findOne(requestedId);
+  @ApiResponse({
+    status: 404,
+    description: 'Flashcard not found',
+    schema: {
+      example: {
+        message: ['Flashcard not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
+  findOne(@Param('id') id: string) {
+    return this.flashcardsService.findOne(+id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin, UserRole.Instructor)
-  @ApiOperation({ summary: 'Cập nhật thông tin flashcard' })
+  @ApiOperation({ summary: 'Update flashcard' })
   @ApiResponse({
     status: 200,
-    description: 'Flashcard đã được cập nhật.',
-    type: Flashcard,
+    description: 'Flashcard updated successfully',
+    schema: {
+      example: {
+        message: ['Flashcard updated successfully'],
+        id: 1,
+        word: 'cloud',
+        definition: 'a fluffy white thing in the sky',
+        topic: 'Weather',
+      },
+    },
   })
   @ApiResponse({
     status: 403,
-    description: 'Không có quyền cập nhật flashcard.',
+    description: 'Forbidden',
+    schema: {
+      example: {
+        message: ['Access denied'],
+        error: 'Forbidden',
+        statusCode: 403,
+      },
+    },
   })
-  update(
-    @Param('id') id: string,
-    @Body() updateFlashcardDto: UpdateFlashcardDto,
-  ) {
-    return this.flashcardsService.update(+id, updateFlashcardDto);
+  @ApiResponse({
+    status: 404,
+    description: 'Flashcard not found',
+    schema: {
+      example: {
+        message: ['Flashcard not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
+  update(@Param('id') id: string, @Body() dto: UpdateFlashcardDto) {
+    return this.flashcardsService.update(+id, dto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin, UserRole.Instructor)
-  @ApiOperation({ summary: 'Xóa một flashcard' })
-  @ApiResponse({ status: 200, description: 'Flashcard đã được xóa.' })
-  @ApiResponse({ status: 403, description: 'Không có quyền xóa flashcard.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy flashcard.' })
+  @ApiOperation({ summary: 'Delete a flashcard' })
+  @ApiResponse({
+    status: 200,
+    description: 'Flashcard deleted successfully',
+    schema: {
+      example: {
+        message: ['Flashcard removed successfully'],
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    schema: {
+      example: {
+        message: ['Access denied'],
+        error: 'Forbidden',
+        statusCode: 403,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Flashcard not found',
+    schema: {
+      example: {
+        message: ['Flashcard not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
   remove(@Param('id') id: string) {
     return this.flashcardsService.remove(+id);
   }
