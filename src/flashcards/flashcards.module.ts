@@ -8,6 +8,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([Flashcard])],
   controllers: [FlashcardsController],
   providers: [FlashcardsService],
-  exports: [FlashcardsService],
+  exports: [FlashcardsService, TypeOrmModule],
 })
 export class FlashcardsModule {}
