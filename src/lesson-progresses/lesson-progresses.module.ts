@@ -12,6 +12,6 @@ import { LessonProgressService } from './lesson-progresses.service';
   imports: [TypeOrmModule.forFeature([LessonProgress, User, Lesson])],
   controllers: [LessonProgressController],
   providers: [LessonProgressService],
-  exports: [LessonProgressService],
+  exports: [LessonProgressService, TypeOrmModule],
 })
 export class LessonProgressesModule {}
