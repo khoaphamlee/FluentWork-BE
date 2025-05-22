@@ -7,8 +7,9 @@ import { LessonQuestion } from 'src/lesson-questions/entities/lesson-question.en
 import { Question } from 'src/questions/entities/question.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Lesson, LessonQuestion, Question])],
-    controllers: [LessonsController],
-    providers: [LessonsService],
+  imports: [TypeOrmModule.forFeature([Lesson, LessonQuestion, Question])],
+  controllers: [LessonsController],
+  providers: [LessonsService],
+  exports: [LessonsService, TypeOrmModule],
 })
 export class LessonsModule {}
