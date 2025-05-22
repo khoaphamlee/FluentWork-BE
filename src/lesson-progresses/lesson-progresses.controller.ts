@@ -1,90 +1,172 @@
 import {
   Controller,
-  Get,
   Post,
-  Body,
   Patch,
+  Get,
   Param,
-  Delete,
+  Body,
+  Request,
+  NotFoundException,
   UseGuards,
-  Req,
-  Query,
-  ParseIntPipe,
 } from '@nestjs/common';
-import { LessonProgressesService } from './lesson-progresses.service';
+
 import { CreateLessonProgressDto } from './dto/create-lesson-progress.dto';
 import { UpdateLessonProgressDto } from './dto/update-lesson-progress.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/auth/roles.decorator';
+
+import { UserRole } from '../common/enums/user-role.enum';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { UserRole } from 'src/common/enums/user-role.enum';
+import { LessonProgressService } from './lesson-progresses.service';
 
-@ApiTags('Lesson Progresses')
+@ApiTags('Lesson Progress')
 @ApiBearerAuth()
-//@UseGuards(JwtAuthGuard, RolesGuard) // phân role
-@Controller('lesson-progresses')
-export class LessonProgressesController {
-  constructor(
-    private readonly lessonProgressesService: LessonProgressesService,
-  ) {}
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('lesson-progress')
+export class LessonProgressController {
+  constructor(private readonly service: LessonProgressService) {}
 
-  @ApiOperation({ summary: 'Learner bắt đầu/chốt tiến độ bài học' })
   @Post()
-  //@Roles(UserRole.Admin, UserRole.Learner)
-  create(@Req() req, @Body() createLessonProgressDto: CreateLessonProgressDto) {
-    const payload = {
-      ...createLessonProgressDto,
-      userId: req.user.id,
-    };
-
-    return this.lessonProgressesService.create(payload);
+  @Roles(UserRole.Learner)
+  @ApiOperation({ summary: 'Learner starts a lesson' })
+  @ApiResponse({
+    status: 201,
+    description: 'Lesson progress started successfully',
+    schema: {
+      example: {
+        message: ['Lesson progress started successfully'],
+        data: {
+          id: 1,
+          status: 'In Progress',
+          total_correct_answers: 0,
+          started_at: '2025-05-23T09:00:00+07:00',
+          completed_at: null,
+          lesson: { id: 1, title: 'Finance Vocabulary Basics' },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User or Lesson not found',
+    schema: {
+      example: {
+        message: ['User or Lesson not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
+  async create(@Request() req, @Body() dto: CreateLessonProgressDto) {
+    return this.service.create(req.user.userId, dto.lessonId);
   }
 
-  @ApiOperation({ summary: 'Liệt kê tiến độ (lọc tuỳ chọn)' })
   @Get()
-  //@Roles(UserRole.Admin, UserRole.Instructor, UserRole.Learner)
-  findAll(
-    @Req() req,
-    @Query('userId') userId?: number,
-    @Query('lessonId') lessonId?: number,
-    @Query('status') status?: 'Not Started' | 'In Progress' | 'Completed',
-  ) {
-    const effectiveUserId =
-      req.user.role === UserRole.Learner ? req.user.id : userId;
-
-    return this.lessonProgressesService.findAll({
-      userId: effectiveUserId,
-      lessonId,
-      status,
-    });
+  @Roles(UserRole.Learner)
+  @ApiOperation({ summary: 'Get all progress records for current learner' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of learner progress',
+    schema: {
+      example: {
+        message: ['Lesson progress retrieved successfully'],
+        data: [
+          {
+            id: 1,
+            status: 'In Progress',
+            total_correct_answers: 2,
+            started_at: '2025-05-23T09:00:00+07:00',
+            completed_at: null,
+            lesson: { id: 1, title: 'Finance Vocabulary Basics' },
+          },
+        ],
+      },
+    },
+  })
+  async findAll(@Request() req) {
+    return this.service.findByUser(req.user.userId);
   }
 
-  @ApiOperation({ summary: 'Xem chi tiết một tiến độ' })
-  @Get(':id')
-  //@Roles(UserRole.Admin, UserRole.Instructor, UserRole.Learner)
-  findOne(@Req() req, @Param('id', ParseIntPipe) id: number) {
-    return this.lessonProgressesService.findOne(id, req.user);
-  }
-  @ApiOperation({ summary: 'Cập nhật tiến độ' })
   @Patch(':id')
-  //@Roles(UserRole.Admin, UserRole.Learner)
-  update(
-    @Req() req,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateLessonProgressDto: UpdateLessonProgressDto,
-  ) {
-    return this.lessonProgressesService.update(
-      id,
-      updateLessonProgressDto,
-      req.user,
-    );
+  @Roles(UserRole.Learner)
+  @ApiOperation({
+    summary: 'Update lesson progress (status, correct answers, etc.)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lesson progress updated successfully',
+    schema: {
+      example: {
+        message: ['Lesson progress updated successfully'],
+        data: {
+          id: 1,
+          status: 'Completed',
+          total_correct_answers: 5,
+          started_at: '2025-05-23T09:00:00+07:00',
+          completed_at: '2025-05-23T09:15:00+07:00',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Progress not found',
+    schema: {
+      example: {
+        message: ['Progress not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
+  async update(@Param('id') id: string, @Body() dto: UpdateLessonProgressDto) {
+    return this.service.update(+id, dto);
   }
 
-  @ApiOperation({ summary: 'Xoá tiến độ (nếu cần rollback)' })
-  @Delete(':id')
-  // @Roles(UserRole.Admin)
-  remove(@Param('id') id: string) {
-    return this.lessonProgressesService.remove(+id);
+  @Get(':lessonId')
+  @Roles(UserRole.Learner)
+  @ApiOperation({
+    summary: 'Get progress of current learner for a specific lesson',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Single lesson progress retrieved',
+    schema: {
+      example: {
+        message: ['Lesson progress retrieved'],
+        data: {
+          id: 1,
+          status: 'In Progress',
+          total_correct_answers: 0,
+          started_at: '2025-05-23T09:00:00+07:00',
+          completed_at: null,
+          lesson: { id: 1, title: 'Finance Vocabulary Basics' },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Progress not found',
+    schema: {
+      example: {
+        message: ['Progress not found'],
+        error: 'Not Found',
+        statusCode: 404,
+      },
+    },
+  })
+  async getProgressByLesson(
+    @Request() req,
+    @Param('lessonId') lessonId: number,
+  ) {
+    return this.service.findByUserAndLesson(req.user.userId, lessonId);
   }
 }
+

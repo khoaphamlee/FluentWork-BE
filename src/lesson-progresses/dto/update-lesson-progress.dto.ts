@@ -1,22 +1,14 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateLessonProgressDto } from './create-lesson-progress.dto';
-import { IsDate, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { IsOptional, IsEnum, IsNumber } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateLessonProgressDto {
-  @IsEnum(['Not Started', 'In Progress', 'Completed'])
   @IsOptional()
+  @IsEnum(['Not Started', 'In Progress', 'Completed'])
+  @ApiPropertyOptional({ enum: ['Not Started', 'In Progress', 'Completed'] })
   status?: 'Not Started' | 'In Progress' | 'Completed';
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
+  @IsNumber()
+  @ApiPropertyOptional({ description: 'Tổng số câu đúng' })
   total_correct_answers?: number;
-
-  @IsOptional()
-  @IsDate()
-  started_at?: Date;
-
-  @IsOptional()
-  @IsDate()
-  completed_at?: Date;
 }

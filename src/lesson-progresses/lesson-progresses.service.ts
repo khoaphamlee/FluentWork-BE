@@ -1,90 +1,97 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { CreateLessonProgressDto } from './dto/create-lesson-progress.dto';
-import { UpdateLessonProgressDto } from './dto/update-lesson-progress.dto';
-import { LessonProgress } from './entities/lesson-progress.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserRole } from 'src/common/enums/user-role.enum';
+
+import { Lesson } from '../lessons/entities/lesson.entity';
+import { User } from '../users/entities/user.entity';
+import { UpdateLessonProgressDto } from './dto/update-lesson-progress.dto';
+import { LessonProgress } from './entities/lesson-progress.entity';
+import toVietnamTime from 'src/common/helper/toVietnamTime';
 
 @Injectable()
-export class LessonProgressesService {
+export class LessonProgressService {
   constructor(
     @InjectRepository(LessonProgress)
-    private readonly lessonProgressRepository: Repository<LessonProgress>,
+    private readonly progressRepo: Repository<LessonProgress>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+    @InjectRepository(Lesson)
+    private readonly lessonRepo: Repository<Lesson>,
   ) {}
 
-  async create(createLessonProgressDto: CreateLessonProgressDto) {
-    // Một user chỉ có 1 progress / lesson ⇒ kiểm tra trùng
-    const duplicate = await this.lessonProgressRepository.findOne({
-      where: {
-        user: { id: createLessonProgressDto.userId },
-        lesson: { id: createLessonProgressDto.lessonId },
-      },
-    });
-    if (duplicate) throw new ConflictException('Progress already exists');
+  async create(userId: number, lessonId: number) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const lesson = await this.lessonRepo.findOne({ where: { id: lessonId } });
 
-    const entity = this.lessonProgressRepository.create({
-      ...createLessonProgressDto,
-      user: { id: createLessonProgressDto.userId } as any,
-      lesson: { id: createLessonProgressDto.lessonId } as any,
+    if (!user || !lesson)
+      throw new NotFoundException(['User or lesson not found']);
+
+    const progress = this.progressRepo.create({
+      user,
+      lesson,
+      status: 'In Progress',
+      started_at: new Date(),
     });
-    return this.lessonProgressRepository.save(entity);
+
+    const saved = await this.progressRepo.save(progress);
+
+    return {
+      message: ['Lesson progress started successfully'],
+      ...saved,
+      started_at: toVietnamTime(saved.started_at),
+      completed_at: toVietnamTime(saved.completed_at),
+    };
   }
 
-  findAll(filters: {
-    userId?: number;
-    lessonId?: number;
-    status?: 'Not Started' | 'In Progress' | 'Completed';
-  }) {
-    return this.lessonProgressRepository.find({
-      where: {
-        ...(filters.userId && { user: { id: filters.userId } }),
-        ...(filters.lessonId && { lesson: { id: filters.lessonId } }),
-        ...(filters.status && { status: filters.status }),
-      },
-      relations: ['user', 'lesson'],
-      order: { updatedAt: 'DESC' },
+  async findByUser(userId: number) {
+    const progresses = await this.progressRepo.find({
+      where: { user: { id: userId } },
+      relations: ['lesson'],
     });
+
+    return {
+      message: ['Lesson progress retrieved successfully'],
+      data: progresses.map((p) => ({
+        ...p,
+        started_at: toVietnamTime(p.started_at),
+        completed_at: toVietnamTime(p.completed_at),
+      })),
+    };
   }
 
-  async findOne(id: number, currentUser: any) {
-    const progress = await this.lessonProgressRepository.findOne({
-      where: { id },
-      relations: ['user', 'lesson'],
-    });
+  async update(id: number, dto: UpdateLessonProgressDto) {
+    const progress = await this.progressRepo.findOne({ where: { id } });
     if (!progress) throw new NotFoundException('Progress not found');
 
-    if (
-      currentUser.role === UserRole.Learner &&
-      progress.user.id !== currentUser.id
-    ) {
-      throw new ForbiddenException('Access denied');
-    }
-    return progress;
-  }
-
-  async update(id: number, dto: UpdateLessonProgressDto, currentUser: any) {
-    const progress = await this.findOne(id, currentUser);
-
-    // Learner chỉ chỉnh của họ
-    if (
-      currentUser.role === UserRole.Learner &&
-      progress.user.id !== currentUser.id
-    ) {
-      throw new ForbiddenException('Access denied');
-    }
-
     Object.assign(progress, dto);
-    return this.lessonProgressRepository.save(progress);
+    if (dto.status === 'Completed' && !progress.completed_at) {
+      progress.completed_at = new Date();
+    }
+
+    const updated = await this.progressRepo.save(progress);
+
+    return {
+      message: ['Lesson progress updated successfully'],
+      ...updated,
+      started_at: toVietnamTime(updated.started_at),
+      completed_at: toVietnamTime(updated.completed_at),
+    };
   }
 
-  async remove(id: number) {
-    await this.lessonProgressRepository.delete(id);
-    return { deleted: true };
+  async findByUserAndLesson(userId: number, lessonId: number) {
+    const progress = await this.progressRepo.findOne({
+      where: { user: { id: userId }, lesson: { id: lessonId } },
+      relations: ['lesson'],
+    });
+
+    if (!progress)
+      throw new NotFoundException(['No progress found for this lesson']);
+
+    return {
+      message: ['Lesson progress retrieved successfully'],
+      ...progress,
+      started_at: toVietnamTime(progress.started_at),
+      completed_at: toVietnamTime(progress.completed_at),
+    };
   }
 }
