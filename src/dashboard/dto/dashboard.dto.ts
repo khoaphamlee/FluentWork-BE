@@ -27,5 +27,5 @@ export class SummaryDto {
   totalQuestions: number;
 
   @ApiProperty({ example: 10 })
-  totalTests: number;
+  totalFlashcards: number;
 }

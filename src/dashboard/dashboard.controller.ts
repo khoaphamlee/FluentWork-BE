@@ -18,7 +18,7 @@ export class DashboardController {
 
   @Get('summary')
   @Roles('Admin')
-  @ApiOperation({ summary: 'Thống kê tổng lesson, question, test, user' })
+  @ApiOperation({ summary: 'Thống kê tổng lesson, question, flashcard, user' })
   @ApiResponse({ status: 200, type: SummaryDto, description: 'Tổng số liệu thống kê hệ thống.' })
   getSummary() {
     return this.dashboardService.getSummary();

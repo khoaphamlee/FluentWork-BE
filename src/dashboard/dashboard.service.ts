@@ -6,6 +6,7 @@ import { Lesson } from '../lessons/entities/lesson.entity';
 import { Question } from '../questions/entities/question.entity';
 import { Test } from '../tests/entities/test.entity';
 import { DateCountDto, RoleDistributionDto } from './dto/dashboard.dto';
+import { Flashcard } from 'src/flashcards/entities/flashcard.entity';
 
 @Injectable()
 export class DashboardService {
@@ -13,18 +14,18 @@ export class DashboardService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
     @InjectRepository(Question) private questionRepo: Repository<Question>,
-    @InjectRepository(Test) private testRepo: Repository<Test>,
+    @InjectRepository(Flashcard) private flashCardRepo: Repository<Flashcard>,
   ) {}
 
   async getSummary(): Promise<Record<string, number>> {
-    const [totalUsers, totalLessons, totalQuestions, totalTests] =
+    const [totalUsers, totalLessons, totalQuestions, totalFlashcards] =
       await Promise.all([
         this.userRepo.count(),
         this.lessonRepo.count(),
         this.questionRepo.count(),
-        this.testRepo.count(),
+        this.flashCardRepo.count(),
       ]);
-    return { totalUsers, totalLessons, totalQuestions, totalTests };
+    return { totalUsers, totalLessons, totalQuestions, totalFlashcards };
   }
 
   async getLearnersPerDay(): Promise<DateCountDto[]> {
