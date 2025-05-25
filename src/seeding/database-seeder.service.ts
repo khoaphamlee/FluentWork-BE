@@ -178,7 +178,7 @@ export class DatabaseSeederService {
         username: 'admin',
         email: 'admin@example.com',
         fullname: 'Administrator',
-        password_hash: password,
+        password: 'admin123',
         role: UserRole.Admin,
       });
       console.log('✅ Admin account seeded'); // password: admin123
@@ -190,12 +190,11 @@ export class DatabaseSeederService {
   async seedLearner() {
     const user = await this.usersService.findByEmail('learner@example.com');
     if (!user) {
-      const password = await bcrypt.hash('learner123', 10);
       await this.usersService.create({
         username: 'learner',
         email: 'learner@example.com',
         fullname: 'Learner',
-        password_hash: password,
+        password: 'learner123',
         role: UserRole.Learner,
       });
       console.log('✅ Learner account seeded'); // password: learner123
@@ -211,7 +210,7 @@ export class DatabaseSeederService {
         username: 'instructor',
         email: 'instructor@example.com',
         fullname: 'Instructor',
-        password_hash: password,
+        password: 'instructor123',
         role: UserRole.Instructor,
       });
       console.log('✅ Instructor account seeded'); // password: instructor123

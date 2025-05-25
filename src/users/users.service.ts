@@ -28,7 +28,20 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto);
+    // Kiểm tra email đã tồn tại chưa
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Email already exists');
+    }
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password_hash: hashedPassword,
+    });
+
     const savedUser = await this.usersRepository.save(user);
     const { password_hash, ...returnUser } = savedUser;
     return {
@@ -49,7 +62,7 @@ export class UsersService {
 
   async findAll(role?: UserRole) {
     const where = role ? { role } : {};
-    const users = await this.usersRepository.find({where});
+    const users = await this.usersRepository.find({ where });
     const returnUsers = users.map(({ password_hash, ...rest }) => rest);
     return {
       message: ['List of users fetched successfully'],

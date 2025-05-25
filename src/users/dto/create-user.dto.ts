@@ -14,7 +14,7 @@ export class CreateUserDto {
   fullname: string;
   @ApiProperty()
   @IsString()
-  password_hash: string;
+  password: string;
   @ApiProperty({ enum: UserRole }) // kiểu enum thì khai báo như vậy
   @IsEnum(UserRole)
   role: UserRole;

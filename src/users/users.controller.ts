@@ -28,7 +28,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
-  ApiQuery
+  ApiQuery,
 } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 
@@ -160,7 +160,7 @@ export class UsersController {
     required: false,
     enum: ['Admin', 'Learner', 'Instructor'],
     description: 'Lọc người dùng theo vai trò',
-    })
+  })
   @ApiResponse({
     status: 200,
     description: 'List of users fetched successfully',
@@ -243,6 +243,17 @@ export class UsersController {
     schema: {
       example: {
         message: ['Email must be a valid email'],
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Email already exists',
+    schema: {
+      example: {
+        message: ['Email already exists'],
         error: 'Bad Request',
         statusCode: 400,
       },
