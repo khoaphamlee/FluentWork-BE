@@ -18,6 +18,7 @@ import { ChangePasswordSuccessDto } from './dto/change-password-success.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserProfileDto } from './dto/user-profile-dto';
 import { UserDto } from './dto/user-dto';
+import { UserRole } from 'src/common/enums/user-role.enum';
 
 @Injectable()
 export class UsersService {
@@ -46,8 +47,9 @@ export class UsersService {
     return user;
   }
 
-  async findAll() {
-    const users = await this.usersRepository.find();
+  async findAll(role?: UserRole) {
+    const where = role ? { role } : {};
+    const users = await this.usersRepository.find({where});
     const returnUsers = users.map(({ password_hash, ...rest }) => rest);
     return {
       message: ['List of users fetched successfully'],

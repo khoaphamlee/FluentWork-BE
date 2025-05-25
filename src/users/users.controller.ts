@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   UsePipes,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,6 +28,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiQuery
 } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 
@@ -153,6 +155,12 @@ export class UsersController {
   @Get('')
   @ApiOperation({ summary: 'Danh sách tất cả người dùng trong hệ thống' })
   @ApiBearerAuth()
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: ['Admin', 'Learner', 'Instructor'],
+    description: 'Lọc người dùng theo vai trò',
+    })
   @ApiResponse({
     status: 200,
     description: 'List of users fetched successfully',
@@ -173,8 +181,8 @@ export class UsersController {
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin) // Chỉ admin mới có thể truy cập vào API dưới
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query('role') role?: UserRole) {
+    return this.usersService.findAll(role);
   }
 
   @Get(':id')
