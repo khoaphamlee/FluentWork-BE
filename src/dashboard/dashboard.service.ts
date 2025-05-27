@@ -7,6 +7,7 @@ import { Question } from '../questions/entities/question.entity';
 import { Test } from '../tests/entities/test.entity';
 import { DateCountDto, RoleDistributionDto } from './dto/dashboard.dto';
 import { Flashcard } from 'src/flashcards/entities/flashcard.entity';
+import { LessonProgress } from 'src/lesson-progresses/entities/lesson-progress.entity';
 
 @Injectable()
 export class DashboardService {
@@ -15,7 +16,29 @@ export class DashboardService {
     @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
     @InjectRepository(Question) private questionRepo: Repository<Question>,
     @InjectRepository(Flashcard) private flashCardRepo: Repository<Flashcard>,
+    @InjectRepository(LessonProgress)
+    private lessonProgressRepo: Repository<LessonProgress>,
   ) {}
+
+  async getLearnerProfileSummary(userId: number): Promise<any> {
+    const user = await this.userRepo.findOneOrFail({ where: { id: userId } });
+
+    const [started, completed] = await Promise.all([
+      this.lessonProgressRepo.count({ where: { user: { id: userId } } }),
+      this.lessonProgressRepo.count({
+        where: { user: { id: userId }, status: 'Completed' },
+      }),
+    ]);
+
+    return {
+      fullName: user.fullname,
+      email: user.email,
+      // currentLevel: user.proficiencyLevel,
+      // registrationDate: user.createdAt,
+      lessonsStarted: started,
+      lessonsCompleted: completed,
+    };
+  }
 
   async getSummary(): Promise<Record<string, number>> {
     const [totalUsers, totalLessons, totalQuestions, totalFlashcards] =

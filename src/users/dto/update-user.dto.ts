@@ -33,7 +33,7 @@ export class UpdateUserDto {
   @IsOptional()
   @MinLength(6)
   @IsString()
-  password_hash?: string;
+  password?: string;
 
   @ApiProperty({ required: false, enum: UserRole })
   @IsOptional()

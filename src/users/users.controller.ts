@@ -239,29 +239,42 @@ export class UsersController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Validation error',
-    schema: {
-      example: {
-        message: ['Email must be a valid email'],
-        error: 'Bad Request',
-        statusCode: 400,
+    description: 'Bad request (validation or business rule)',
+    content: {
+      'application/json': {
+        examples: {
+          ValidationError: {
+            summary: 'Validation error',
+            value: {
+              message: ['Email must be a valid email'],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          EmailExists: {
+            summary: 'Email already exists',
+            value: {
+              message: ['Email already exists'],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          UsernameExists: {
+            summary: 'Username already exists',
+            value: {
+              message: ['Username already exists'],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
       },
     },
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Email already exists',
-    schema: {
-      example: {
-        message: ['Email already exists'],
-        error: 'Bad Request',
-        statusCode: 400,
-      },
-    },
-  })
-  //Uncomment 2 dòng bên dưới để tạo Admin
-  //@UseGuards(JwtAuthGuard, RolesGuard)
-  //@Roles('Admin')
+
+  // Uncomment 2 dòng bên dưới để tạo Admin
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('Admin')
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
@@ -291,6 +304,40 @@ export class UsersController {
         message: ['User not found'],
         error: 'Not Found',
         statusCode: 404,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request (validation or business rule)',
+    content: {
+      'application/json': {
+        examples: {
+          ValidationError: {
+            summary: 'Validation error',
+            value: {
+              message: ['Email must be a valid email'],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          EmailExists: {
+            summary: 'Email already exists',
+            value: {
+              message: ['Email already exists'],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          UsernameExists: {
+            summary: 'Username already exists',
+            value: {
+              message: ['Username already exists'],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
       },
     },
   })

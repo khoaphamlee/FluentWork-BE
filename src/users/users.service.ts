@@ -28,15 +28,26 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    // Kiểm tra email đã tồn tại chưa
-    const existingUser = await this.usersRepository.findOne({
+    // ✅ Kiểm tra email
+    const existingEmail = await this.usersRepository.findOne({
       where: { email: createUserDto.email },
     });
-
-    if (existingUser) {
-      throw new BadRequestException('Email already exists');
+    if (existingEmail) {
+      throw new BadRequestException(['Email already exists']);
     }
+
+    // ✅ Kiểm tra username
+    const existingUsername = await this.usersRepository.findOne({
+      where: { username: createUserDto.username },
+    });
+    if (existingUsername) {
+      throw new BadRequestException(['Username already exists']);
+    }
+
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    // ✅ Tạo user mới
     const user = this.usersRepository.create({
       ...createUserDto,
       password_hash: hashedPassword,
@@ -44,11 +55,13 @@ export class UsersService {
 
     const savedUser = await this.usersRepository.save(user);
     const { password_hash, ...returnUser } = savedUser;
+
     return {
       message: ['User created successfully'],
       ...returnUser,
     };
   }
+
   // gọi và chỉ trả về trong code (lộ hash_password nếu trả về cho client)
   async getHashPassword(email: string) {
     const user = await this.usersRepository.findOne({ where: { email } });
@@ -119,10 +132,39 @@ export class UsersService {
       throw new NotFoundException(['User not found']);
     }
 
-    Object.assign(user, updateUserDto);
+    // ✅ Kiểm tra email nếu thay đổi
+    if (updateUserDto.email && updateUserDto.email !== user.email) {
+      const existingUser = await this.usersRepository.findOne({
+        where: { email: updateUserDto.email },
+      });
 
-    const saved = await this.usersRepository.save(user);
-    const { password_hash, ...returnUser } = saved;
+      if (existingUser && existingUser.id !== id) {
+        throw new BadRequestException(['Email already exists']);
+      }
+    }
+
+    // ✅ Kiểm tra username nếu thay đổi
+    if (updateUserDto.username && updateUserDto.username !== user.username) {
+      const existingUser = await this.usersRepository.findOne({
+        where: { username: updateUserDto.username },
+      });
+
+      if (existingUser && existingUser.id !== id) {
+        throw new BadRequestException(['Username already exists']);
+      }
+    }
+
+    // ✅ Hash lại password nếu có
+    if (updateUserDto.password) {
+      user.password_hash = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    // ✅ Gán các trường còn lại, bỏ password
+    const { password, ...rest } = updateUserDto;
+    Object.assign(user, rest);
+
+    const savedUser = await this.usersRepository.save(user);
+    const { password_hash, ...returnUser } = savedUser;
 
     return {
       message: ['User updated successfully'],
