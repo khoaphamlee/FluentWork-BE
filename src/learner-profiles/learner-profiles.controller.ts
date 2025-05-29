@@ -23,7 +23,6 @@ import { Roles } from 'src/auth/roles.decorator';
 
 @ApiTags('Learner Profiles')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('learner-profiles')
 export class LearnerProfilesController {
   constructor(
@@ -33,6 +32,42 @@ export class LearnerProfilesController {
   @Post()
   @Roles('Learner')
   @ApiOperation({ summary: 'Learner tạo hồ sơ cá nhân' })
+  @ApiResponse({
+    status: 201,
+    description: 'LearnerProfile created successfully',
+    schema: {
+      example: {
+        id: 1,
+        user: { id: 1, username: 'learner', email: 'learner@example.com' },
+        level: 'Intermediate',
+        total_lessons_completed: 5,
+        created_at: '2025-05-29T06:14:26.266Z',
+        updated_at: '2025-05-29T06:14:26.266Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'User not found',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'LearnerProfile for this user already exists',
+    schema: {
+      example: {
+        statusCode: 409,
+        message: 'LearnerProfile for this user already exists',
+        error: 'Conflict',
+      },
+    },
+  })
   create(@Body() dto: CreateLearnerProfileDto) {
     return this.learnerProfilesService.create(dto);
   }
@@ -40,6 +75,28 @@ export class LearnerProfilesController {
   @Get()
   @Roles('Admin')
   @ApiOperation({ summary: 'Admin xem tất cả hồ sơ người học' })
+  @ApiResponse({
+    status: 200,
+    description: 'Fetch all learner profiles',
+    schema: {
+      example: [
+        {
+          id: 1,
+          user: {
+            id: 142,
+            username: 'learner',
+            email: 'learner@example.com',
+            full_name: 'Learner',
+            role: 'Learner',
+          },
+          level: 'Intermediate',
+          total_lessons_completed: 5,
+          created_at: '2025-05-29T06:14:26.266Z',
+          updated_at: '2025-05-29T06:14:26.266Z',
+        },
+      ],
+    },
+  })
   findAll() {
     return this.learnerProfilesService.findAll();
   }
@@ -47,6 +104,37 @@ export class LearnerProfilesController {
   @Get(':id')
   @Roles('Admin', 'Learner')
   @ApiOperation({ summary: 'Xem chi tiết hồ sơ người học' })
+  @ApiResponse({
+    status: 200,
+    description: 'LearnerProfile details',
+    schema: {
+      example: {
+        id: 1,
+        user: {
+          id: 142,
+          username: 'learner',
+          email: 'learner@example.com',
+          full_name: 'Learner',
+          role: 'Learner',
+        },
+        level: 'Intermediate',
+        total_lessons_completed: 5,
+        created_at: '2025-05-29T06:14:26.266Z',
+        updated_at: '2025-05-29T06:14:26.266Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'LearnerProfile not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'LearnerProfile not found',
+        error: 'Not Found',
+      },
+    },
+  })
   findOne(@Param('id') id: string) {
     return this.learnerProfilesService.findOne(+id);
   }
@@ -54,6 +142,29 @@ export class LearnerProfilesController {
   @Patch(':id')
   @Roles('Learner')
   @ApiOperation({ summary: 'Learner cập nhật tiến độ của mình' })
+  @ApiResponse({
+    status: 200,
+    description: 'LearnerProfile updated successfully',
+    schema: {
+      example: {
+        id: 1,
+        level: 'Advanced',
+        total_lessons_completed: 10,
+        updated_at: '2025-05-29T10:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'LearnerProfile not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'LearnerProfile not found',
+        error: 'Not Found',
+      },
+    },
+  })
   update(@Param('id') id: string, @Body() dto: UpdateLearnerProfileDto) {
     return this.learnerProfilesService.update(+id, dto);
   }
@@ -61,6 +172,26 @@ export class LearnerProfilesController {
   @Delete(':id')
   @Roles('Admin')
   @ApiOperation({ summary: 'Admin xóa hồ sơ người học' })
+  @ApiResponse({
+    status: 200,
+    description: 'LearnerProfile deleted successfully',
+    schema: {
+      example: {
+        message: 'LearnerProfile deleted successfully',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'LearnerProfile not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'LearnerProfile not found',
+        error: 'Not Found',
+      },
+    },
+  })
   remove(@Param('id') id: string) {
     return this.learnerProfilesService.remove(+id);
   }

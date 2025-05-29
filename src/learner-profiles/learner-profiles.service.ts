@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LearnerProfile } from './entities/learner-profile.entity';
@@ -19,14 +23,22 @@ export class LearnerProfilesService {
   async create(dto: CreateLearnerProfileDto): Promise<LearnerProfile> {
     const user = await this.userRepo.findOneBy({ id: dto.user_id });
     if (!user) {
-      throw new NotFoundException(`User with id ${dto.user_id} not found`);
+      throw new NotFoundException(`User  not found`);
+    }
+
+    const existingProfile = await this.learnerProfileRepo.findOne({
+      where: { user: { id: dto.user_id } },
+    });
+    if (existingProfile) {
+      throw new ConflictException(
+        `LearnerProfile for this user already exists`,
+      );
     }
 
     const profile = new LearnerProfile();
-    profile.user = user; 
+    profile.user = user;
     profile.level = dto.proficiency_level;
     profile.total_lessons_completed = dto.total_lessons_completed;
-    profile.last_activity_date = dto.last_activity_date ?? null;
 
     return await this.learnerProfileRepo.save(profile);
   }
@@ -41,7 +53,7 @@ export class LearnerProfilesService {
       relations: ['user'],
     });
     if (!profile) {
-      throw new NotFoundException(`LearnerProfile with id ${id} not found`);
+      throw new NotFoundException(`LearnerProfile not found`);
     }
     return profile;
   }
@@ -55,22 +67,16 @@ export class LearnerProfilesService {
       relations: ['user'],
     });
     if (!profile) {
-      throw new NotFoundException(`LearnerProfile with id ${id} not found`);
+      throw new NotFoundException(`LearnerProfile not found`);
     }
 
-    if (dto.user_id) {
-      const user = await this.userRepo.findOneBy({ id: dto.user_id });
-      if (!user) {
-        throw new NotFoundException(`User with id ${dto.user_id} not found`);
-      }
-      profile.user = user;
+    if (dto.proficiency_level) {
+      profile.level = dto.proficiency_level;
     }
 
-    if (dto.proficiency_level) profile.level = dto.proficiency_level;
-    if (dto.total_lessons_completed !== undefined)
+    if (dto.total_lessons_completed !== undefined) {
       profile.total_lessons_completed = dto.total_lessons_completed;
-    if (dto.last_activity_date !== undefined)
-      profile.last_activity_date = dto.last_activity_date;
+    }
 
     return this.learnerProfileRepo.save(profile);
   }
@@ -78,7 +84,7 @@ export class LearnerProfilesService {
   async remove(id: number): Promise<void> {
     const result = await this.learnerProfileRepo.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`LearnerProfile with id ${id} not found`);
+      throw new NotFoundException(`LearnerProfile not found`);
     }
   }
 }

@@ -33,8 +33,8 @@ export class LearnerProfile {
   @Column({ default: 0 })
   total_lessons_completed: number;
 
-  @Column({ type: 'timestamp', nullable: true })
-  last_activity_date: Date | null;
+  // @Column({ type: 'timestamp', nullable: true })
+  // last_activity_date: Date | null;
 
   @CreateDateColumn()
   created_at: Date;
