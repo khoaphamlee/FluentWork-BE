@@ -22,6 +22,8 @@ import { User } from 'src/users/entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { CreatePlacementTestDto } from './dto/create-placement-test.dto';
+import { AuthGuard } from '@nestjs/passport';
   
 @ApiTags('Tests')
 @Controller('tests')
@@ -56,12 +58,23 @@ export class TestsController {
     }
 
     @Post('placement')
+    @UseGuards(JwtAuthGuard)
     @ApiOperation({ summary: 'Create a placement test (10 questions)' })
-    @ApiBody({ type: CreateTestDto, schema: { example: { userId: 2, duration: '15m', test_date: '2025-05-17T08:00:00Z' }}})
+    @ApiBody({
+    type: CreatePlacementTestDto,
+    schema: {
+        example: {
+            duration: '15m',
+            test_date: '2025-05-17T08:00:00Z',
+        },
+    },
+    })
     @ApiResponse({ status: 201, description: 'Placement test created.' })
-    createPlacement(@Body() dto: CreateTestDto) {
-        return this.testsService.createPlacementTest(dto);
+    createPlacement(@Request() req, @Body() dto: CreatePlacementTestDto) {
+        const user = req.user as any;
+        return this.testsService.createPlacementTest(user, dto);
     }
+
 
     @Get()
     @ApiOperation({ summary: 'Get all tests' })
@@ -69,6 +82,18 @@ export class TestsController {
     findAll() {
       return this.testsService.findAll();
     }
+
+    @Get('placement/me')
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Get the current user’s placement test' })
+    @ApiResponse({ status: 200, description: 'Placement test found.' })
+    @ApiResponse({ status: 404, description: 'Placement test not found.' })
+    getPlacementTestForUser(@Request() req: any) {
+        console.log('Request user:', req.user);
+        const userId = req.user.userId;
+        return this.testsService.getPlacementTestForUser(userId);
+    }
+
   
     @Get(':id')
     @ApiOperation({ summary: 'Get a test by ID' })

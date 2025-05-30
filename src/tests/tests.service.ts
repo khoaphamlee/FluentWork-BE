@@ -21,6 +21,7 @@ import { Option } from 'src/options/entities/option.entity';
 import { SubmitTestDto } from './dto/submit-test.dto';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+import { CreatePlacementTestDto } from './dto/create-placement-test.dto';
 
 @Injectable()
 export class TestsService {
@@ -145,47 +146,74 @@ export class TestsService {
     return template;
   }
 
-  async createPlacementTest(dto: CreateTestDto): Promise<Test> {
-    const user = await this.userRepository.findOneBy({ id: dto.userId });
-    if (!user) throw new NotFoundException('User not found');
+  private async createPlacementTemplate(): Promise<TestTemplate> {
+  const allVocabulary = Object.values(VocabularyTopic).sort();
+  const allGrammar = Object.values(GrammarTopic).sort();
 
-    dto.level = 'All';
-    dto.type = 'Mixed';
-    dto.vocabulary_topic = Object.values(VocabularyTopic);
-    dto.grammar_topic = Object.values(GrammarTopic);
-
-    const template = await this.findOrCreateTemplate(dto);
-
-    const test = this.testRepository.create({
-      user: { id: user.id },
-      testTemplate: template,
-      score: 0,
-      duration: dto.duration,
-      test_date: dto.test_date ?? new Date(),
-      total_correct_answer: 0,
-      total_incorrect_answer: 0,
+  const templateQuery = this.testTemplateRepository
+    .createQueryBuilder('template')
+    .where('template.level = :level', { level: 'All' })
+    .andWhere('template.type = :type', { type: 'Mixed' })
+    .andWhere('template.vocabulary_topic = :vocabulary', {
+      vocabulary: `{${allVocabulary.join(',')}}`,
+    })
+    .andWhere('template.grammar_topic = :grammar', {
+      grammar: `{${allGrammar.join(',')}}`,
     });
-    await this.testRepository.save(test);
 
-    const questions = await this.testTemplateService.getPlacementTestQuestions(
-      template.id,
-    );
+  let template = await templateQuery.getOne();
 
-    const testQuestions = questions.map((question) =>
-      this.testQuestionRepository.create({
-        test,
-        question,
-      }),
-    );
-    await this.testQuestionRepository.save(testQuestions);
-
-    const created = await this.testRepository.findOne({
-      where: { id: test.id },
-      relations: ['testQuestions', 'testQuestions.question'],
+  if (!template) {
+    const { title, description } = this.generateTemplateInfo('All', 'Mixed');
+    template = this.testTemplateRepository.create({
+      level: 'All',
+      type: 'Mixed',
+      vocabulary_topic: allVocabulary,
+      grammar_topic: allGrammar,
+      title,
+      description,
     });
-    if (!created) throw new Error('Failed to load placement test');
-    return created;
+    await this.testTemplateRepository.save(template);
   }
+
+  return template;
+}
+
+  async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test> {
+  const template = await this.createPlacementTemplate();
+
+  const test = this.testRepository.create({
+    level: Level.ALL,
+    user: { id: user.id },
+    testTemplate: template,
+    score: 0,
+    duration: dto.duration,
+    test_date: dto.test_date ?? new Date(),
+    total_correct_answer: dto.total_correct_answers ?? 0,
+    total_incorrect_answer: dto.total_incorrect_answers ?? 0,
+  });
+  await this.testRepository.save(test);
+
+  const questions = await this.testTemplateService.getPlacementTestQuestions(template.id);
+
+  const testQuestions = questions.map((question) =>
+    this.testQuestionRepository.create({
+      test,
+      question,
+    }),
+  );
+  await this.testQuestionRepository.save(testQuestions);
+
+  const created = await this.testRepository.findOne({
+    where: { id: test.id },
+    relations: ['testQuestions', 'testQuestions.question'],
+  });
+
+  if (!created) throw new Error('Failed to load placement test');
+
+  return created;
+}
+
 
   async findAll(): Promise<Test[]> {
     return await this.testRepository.find({
@@ -442,4 +470,29 @@ export class TestsService {
       level: learnerProfile.level,
     };
   }
+
+  async getPlacementTestForUser(userId: number) {
+    if (!userId) {
+    throw new NotFoundException(`User ${userId} does not found`);
+  }
+  const placementTest = await this.testRepository
+    .createQueryBuilder('test')
+    .leftJoinAndSelect('test.testTemplate', 'testTemplate')
+    .leftJoinAndSelect('test.testQuestions', 'testQuestions')
+    .leftJoinAndSelect('test.testMistakes', 'testMistakes')
+    .where('test.userId = :userId', { userId })
+    .andWhere('testTemplate.type = :type', { type: 'Mixed' }) // Chỉ lấy bài test tổng hợp
+    .andWhere('testTemplate.level = :level', { level: 'All' }) // Cho mọi trình độ
+    .getOne();
+
+  if (!placementTest) {
+    throw new NotFoundException(`User ${userId} does not have a placement test`);
+  }
+
+  return placementTest;
+}
+
+
+
+
 }
