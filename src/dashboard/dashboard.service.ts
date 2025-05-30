@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
@@ -19,26 +19,6 @@ export class DashboardService {
     @InjectRepository(LessonProgress)
     private lessonProgressRepo: Repository<LessonProgress>,
   ) {}
-
-  async getLearnerProfileSummary(userId: number): Promise<any> {
-    const user = await this.userRepo.findOneOrFail({ where: { id: userId } });
-
-    const [started, completed] = await Promise.all([
-      this.lessonProgressRepo.count({ where: { user: { id: userId } } }),
-      this.lessonProgressRepo.count({
-        where: { user: { id: userId }, status: 'Completed' },
-      }),
-    ]);
-
-    return {
-      fullName: user.fullname,
-      email: user.email,
-      // currentLevel: user.proficiencyLevel,
-      // registrationDate: user.createdAt,
-      lessonsStarted: started,
-      lessonsCompleted: completed,
-    };
-  }
 
   async getSummary(): Promise<Record<string, number>> {
     const [totalUsers, totalLessons, totalQuestions, totalFlashcards] =
@@ -71,5 +51,68 @@ export class DashboardService {
       [totalUsers],
     );
     return raw;
+  }
+
+  async getLearnerProfileSummary(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['learnerProfile'],
+    });
+
+    if (!user || !user.learnerProfile) {
+      throw new NotFoundException('Learner profile not found');
+    }
+
+    const totalLessonsStarted = await this.lessonProgressRepo.count({
+      where: { user: { id: userId } },
+    });
+
+    return {
+      fullName: user.fullname,
+      email: user.email,
+      level: user.learnerProfile.level,
+      registeredAt: user.created_at,
+      totalLessonsStarted,
+      totalLessonsCompleted: user.learnerProfile.total_lessons_completed,
+    };
+  }
+  async getProgressSummary(userId: number) {
+    const totalLessons = await this.lessonProgressRepo.count({
+      where: { user: { id: userId } },
+    });
+
+    const completedLessons = await this.lessonProgressRepo.count({
+      where: {
+        user: { id: userId },
+        status: 'Completed',
+      },
+    });
+
+    const completionRate =
+      totalLessons > 0
+        ? Math.round((completedLessons / totalLessons) * 100)
+        : 0;
+
+    return {
+      totalLessons,
+      completedLessons,
+      completionRate,
+    };
+  }
+  async getRecentActivity(userId: number) {
+    const recent = await this.lessonProgressRepo.find({
+      where: { user: { id: userId } },
+      order: { updatedAt: 'DESC' },
+      take: 5,
+      relations: ['lesson'],
+    });
+
+    return recent.map((lp) => ({
+      lessonTitle: lp.lesson.title,
+      status: lp.status,
+      correctAnswers: lp.total_correct_answers,
+      totalQuestions: lp.lesson.lessonQuestions?.length ?? 10, // giả định nếu không có quan hệ
+      learnedAt: lp.completed_at || lp.started_at || lp.updatedAt,
+    }));
   }
 }

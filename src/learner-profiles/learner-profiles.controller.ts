@@ -31,7 +31,7 @@ export class LearnerProfilesController {
 
   @Post()
   @Roles('Learner')
-  @ApiOperation({ summary: 'Learner tạo hồ sơ cá nhân' })
+  @ApiOperation({ summary: 'Learner tạo hồ sơ cá nhân' }) 
   @ApiResponse({
     status: 201,
     description: 'LearnerProfile created successfully',

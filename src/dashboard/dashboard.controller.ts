@@ -47,25 +47,4 @@ export class DashboardController {
   getUserRoleDistribution(): Promise<RoleDistributionDto[]> {
     return this.dashboardService.getUserRoleDistribution();
   }
-
-  //   @Get('profile-summary')
-  // @Roles('Learner')
-  // @ApiOperation({ summary: 'Tóm tắt hồ sơ người học' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Thông tin hồ sơ người học',
-  //   schema: {
-  //     example: {
-  //       fullName: 'Nguyen Van A',
-  //       email: 'a@gmail.com',
-  //       currentLevel: 'Intermediate',
-  //       registrationDate: '2025-05-01',
-  //       lessonsStarted: 12,
-  //       lessonsCompleted: 9,
-  //     },
-  //   },
-  // })
-  // // getProfileSummary(@CurrentUser() user: User) {
-  // //   return this.dashboardService.getLearnerProfileSummary(user.id);
-  // // }
 }

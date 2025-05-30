@@ -24,63 +24,63 @@ import {
 
 @Entity({ name: 'users' })
 export class User {
-    @ApiProperty()
-    @PrimaryGeneratedColumn()
-    id: number;
+  @ApiProperty()
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @ApiProperty()
-    @Column({ unique: true })
-    username: string;
+  @ApiProperty()
+  @Column({ unique: true })
+  username: string;
 
-    @ApiProperty()
-    @Column({ unique: true })
-    email: string;
+  @ApiProperty()
+  @Column({ unique: true })
+  email: string;
 
-    @ApiProperty()
-    @Column()
-    fullname: string;
+  @ApiProperty()
+  @Column()
+  fullname: string;
 
-    @ApiProperty()
-    @Column()
-    password_hash: string;
+  @ApiProperty()
+  @Column()
+  password_hash: string;
 
-    @ApiProperty()
-    @Column({
-        type: 'enum',
-        enum: ['Admin', 'Learner', 'Instructor'],
-        default: 'Learner',
-    })
-    role: 'Admin' | 'Learner' | 'Instructor';
+  @ApiProperty()
+  @Column({
+    type: 'enum',
+    enum: ['Admin', 'Learner', 'Instructor'],
+    default: 'Learner',
+  })
+  role: 'Admin' | 'Learner' | 'Instructor';
 
-    @ApiProperty()
-    @CreateDateColumn()
-    created_at: Date;
+  @ApiProperty()
+  @CreateDateColumn()
+  created_at: Date;
 
-    @ApiProperty()
-    @UpdateDateColumn()
-    updated_at: Date;
+  @ApiProperty()
+  @UpdateDateColumn()
+  updated_at: Date;
 
-    @OneToMany(() => Discussion, (discussion) => discussion.user)
-    discussions: Discussion[];
+  @OneToMany(() => Discussion, (discussion) => discussion.user)
+  discussions: Discussion[];
 
-    @OneToMany(() => DiscussionReply, (reply) => reply.user)
-    replies: DiscussionReply[];
+  @OneToMany(() => DiscussionReply, (reply) => reply.user)
+  replies: DiscussionReply[];
 
-    @OneToOne(() => LearningPath, (learningPath) => learningPath)
-    learningPath: LearningPath;
+  @OneToOne(() => LearningPath, (learningPath) => learningPath)
+  learningPath: LearningPath;
 
-    @OneToOne(() => LessonProgress, (learnerProgress) => learnerProgress.user)
-    learnerProgress: LessonProgress[];
+  @OneToOne(() => LessonProgress, (learnerProgress) => learnerProgress.user)
+  learnerProgress: LessonProgress[];
 
-    @OneToMany(() => Test, (test) => test.user)
-    tests: Test[];
+  @OneToMany(() => Test, (test) => test.user)
+  tests: Test[];
 
-    @OneToMany(() => LessonQa, (qa) => qa.user)
-    lessonQas: LessonQa[];
+  @OneToMany(() => LessonQa, (qa) => qa.user)
+  lessonQas: LessonQa[];
 
-    @OneToMany(() => LessonQaAnswer, (qaAnswer) => qaAnswer.user)
-    lessonQaAnswers: LessonQaAnswer[];
+  @OneToMany(() => LessonQaAnswer, (qaAnswer) => qaAnswer.user)
+  lessonQaAnswers: LessonQaAnswer[];
 
-    @OneToOne(() => LearnerProfile, (learnerProfile) => learnerProfile.user)
-    learnerProfile: LearnerProfile[];
+  @OneToOne(() => LearnerProfile, (learnerProfile) => learnerProfile.user)
+  learnerProfile: LearnerProfile;
 }
