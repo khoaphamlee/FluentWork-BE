@@ -85,10 +85,10 @@ export class TestTemplatesController {
     }
 
     @Get(':id/questions')
-    @ApiOperation({ summary: 'Get filtered questions by test template ID' })
-    async getFilteredQuestions(@Param('id') id: number) {
+    @ApiOperation({ summary: 'Get questions by test template ID' })
+    async getQuestionsByTemplate(@Param('id') id: number) {
         try {
-            const questions = await this.testTemplatesService.getFilteredQuestionsForTemplate(id);
+            const questions = await this.testTemplatesService.getQuestionsByTemplate(id);
             return questions;
         } catch (error) {
             if (error instanceof NotFoundException) {
@@ -98,7 +98,5 @@ export class TestTemplatesController {
             throw new InternalServerErrorException('Unexpected error occurred');
         }
     }
-
-
 }
   

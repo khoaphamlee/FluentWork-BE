@@ -6,6 +6,7 @@ import { CreateTestTemplateDto } from './dto/create-test-template.dto';
 import { UpdateTestTemplateDto } from './dto/update-test-template.dto';
 import { Question } from 'src/questions/entities/question.entity';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
+import { Level } from 'src/enum/level.enum';
 
 @Injectable()
 export class TestTemplatesService {
@@ -61,158 +62,104 @@ export class TestTemplatesService {
         return { deleted: true };
     }
   
-    async getTestQuestionsByTemplate(id: number) {
-        const testTemplate = await this.testTemplateRepository.findOne({
-            where: { id },
-            relations: ['questions'],
-        });
-
-        if (!testTemplate) {
-            throw new Error('Test template not found');
-        }
-
-        const query = this.questionRepository
-            .createQueryBuilder('question')
-            .where('1=1');
-
-        query.andWhere('question.level = :level', { level: testTemplate.level });
-        
-        if (testTemplate.type === 'Mixed') {
-            if (testTemplate.vocabulary_topic && testTemplate.vocabulary_topic.length > 0) {
-                query.andWhere('question.vocabulary_topic IN (:...vocabularyTopics)', {
-                    vocabularyTopics: testTemplate.vocabulary_topic,
-                });
-            }
-
-            if (testTemplate.grammar_topic && testTemplate.grammar_topic.length > 0) {
-                query.andWhere('question.grammar_topic IN (:...grammarTopics)', {
-                    grammarTopics: testTemplate.grammar_topic,
-                });
-            }
-        } else {
-            if (testTemplate.type === 'Vocabulary' && testTemplate.vocabulary_topic) {
-                query.andWhere('question.vocabulary_topic IN (:...vocabularyTopics)', {
-                    vocabularyTopics: testTemplate.vocabulary_topic,
-                });
-            }
-
-            if (testTemplate.type === 'Grammar' && testTemplate.grammar_topic) {
-                query.andWhere('question.grammar_topic IN (:...grammarTopics)', {
-                    grammarTopics: testTemplate.grammar_topic,
-                });
-            }
-        }
-
-        const questions = await query.getMany();
-
-        return questions;
-    }
-
-    async getFilteredQuestionsForTemplate(templateId: number): Promise<Question[]> {
+    async getQuestionsByTemplate(templateId: number): Promise<Question[]> {
         const template = await this.testTemplateRepository.findOne({
             where: { id: templateId },
         });
-    
+
         if (!template) {
             throw new NotFoundException(`Test template with id ${templateId} not found`);
         }
-    
+
         const query = this.questionRepository.createQueryBuilder('question');
-    
-        if (template.level && template.level !== 'All') {
+
+        // Filter theo level nếu có
+        if (template.level && template.level !== Level.ALL) {
             query.andWhere('question.level = :level', { level: template.level });
         }
-    
+
+        // Normalize topic thành mảng an toàn
+        const vocabTopics = Array.isArray(template.vocabulary_topic)
+            ? template.vocabulary_topic
+            : [template.vocabulary_topic].filter(Boolean);
+
+        const grammarTopics = Array.isArray(template.grammar_topic)
+            ? template.grammar_topic
+            : [template.grammar_topic].filter(Boolean);
+
+        // Filter theo type
         if (template.type === 'Mixed') {
-            query.andWhere(new Brackets(qb => {
-                const hasVocab = Array.isArray(template.vocabulary_topic) && template.vocabulary_topic.length > 0;
-                const hasGrammar = Array.isArray(template.grammar_topic) && template.grammar_topic.length > 0;
-    
-                if (hasVocab) {
-                    qb.where('question.vocabulary_topic IN (:...vocabTopics)', {
-                        vocabTopics: template.vocabulary_topic,
-                    });
-                }
-    
-                if (hasGrammar) {
-                    const method = hasVocab ? 'orWhere' : 'where';
-                    qb[method]('question.grammar_topic IN (:...grammarTopics)', {
-                        grammarTopics: template.grammar_topic,
-                    });
-                }
-            }));
-        } else if (template.type === 'Vocabulary' && Array.isArray(template.vocabulary_topic) && template.vocabulary_topic.length > 0) {
-            query.andWhere('question.vocabulary_topic IN (:...vocabTopics)', {
-                vocabTopics: template.vocabulary_topic,
-            });
-        } else if (template.type === 'Grammar' && Array.isArray(template.grammar_topic) && template.grammar_topic.length > 0) {
-            query.andWhere('question.grammar_topic IN (:...grammarTopics)', {
-                grammarTopics: template.grammar_topic,
-            });
+            if (vocabTopics.length > 0 || grammarTopics.length > 0) {
+                query.andWhere(new Brackets(qb => {
+                    if (vocabTopics.length > 0) {
+                        qb.where('question.vocabulary_topic IN (:...vocabTopics)', { vocabTopics });
+                    }
+                    if (grammarTopics.length > 0) {
+                        const method = vocabTopics.length > 0 ? 'orWhere' : 'where';
+                        qb[method]('question.grammar_topic IN (:...grammarTopics)', { grammarTopics });
+                    }
+                }));
+            }
+        } else if (template.type === 'Vocabulary' && vocabTopics.length > 0) {
+            query.andWhere('question.vocabulary_topic IN (:...vocabTopics)', { vocabTopics });
+        } else if (template.type === 'Grammar' && grammarTopics.length > 0) {
+            query.andWhere('question.grammar_topic IN (:...grammarTopics)', { grammarTopics });
         }
-    
+
         return await query.getMany();
     }
 
     async getPlacementTestQuestions(templateId: number): Promise<Question[]> {
-    const template = await this.testTemplateRepository.findOne({
-        where: { id: templateId },
-    });
+        const template = await this.testTemplateRepository.findOne({
+            where: { id: templateId },
+            select: ['id'],
+        });
 
-    if (!template) {
-        throw new NotFoundException(`Test template with id ${templateId} not found`);
-    }
-
-    const levels = ['Beginner', 'Intermediate', 'Advanced'];
-    const vocabCounts = [2, 2, 1];
-    const grammarCounts = [2, 2, 1];
-
-    const finalQuestions: Question[] = [];
-
-    for (let i = 0; i < levels.length; i++) {
-        const level = levels[i];
-
-        // Lấy câu Vocabulary
-        const vocabQuestions = await this.questionRepository
-            .createQueryBuilder('question')
-            .where('question.level = :level', { level })
-            .andWhere('question.vocabulary_topic IN (:...vocabTopics)', {
-                vocabTopics: template.vocabulary_topic ?? [],
-            })
-            .andWhere('question.type = :type', { type: 'Vocabulary' }) // Nếu có field type
-            .limit(vocabCounts[i])
-            .orderBy('RANDOM()')
-            .getMany();
-
-        if (vocabQuestions.length < vocabCounts[i]) {
-            throw new Error(
-                `Not enough vocabulary questions for level ${level}. Needed ${vocabCounts[i]}, got ${vocabQuestions.length}`
-            );
+        if (!template) {
+            throw new NotFoundException(`Test template with id ${templateId} not found`);
         }
 
-        // Lấy câu Grammar
-        const grammarQuestions = await this.questionRepository
-            .createQueryBuilder('question')
-            .where('question.level = :level', { level })
-            .andWhere('question.grammar_topic IN (:...grammarTopics)', {
-                grammarTopics: template.grammar_topic ?? [],
-            })
-            .andWhere('question.type = :type', { type: 'Grammar' }) // Nếu có field type
-            .limit(grammarCounts[i])
-            .orderBy('RANDOM()')
-            .getMany();
+        const levels = ['Beginner', 'Intermediate', 'Advanced'];
+        const vocabCounts = [2, 2, 1];
+        const grammarCounts = [2, 2, 1];
 
-        if (grammarQuestions.length < grammarCounts[i]) {
-            throw new Error(
-                `Not enough grammar questions for level ${level}. Needed ${grammarCounts[i]}, got ${grammarQuestions.length}`
-            );
+        const finalQuestions: Question[] = [];
+
+        for (let i = 0; i < levels.length; i++) {
+            const level = levels[i];
+
+            const vocabQuestions = await this.questionRepository
+                .createQueryBuilder('question')
+                .where('question.level = :level', { level })
+                .andWhere('question.type = :type', { type: 'Vocabulary' })
+                .limit(vocabCounts[i])
+                .orderBy('RANDOM()')
+                .getMany();
+
+            if (vocabQuestions.length < vocabCounts[i]) {
+                throw new Error(
+                    `Not enough vocabulary questions for level ${level}. Needed ${vocabCounts[i]}, got ${vocabQuestions.length}`
+                );
+            }
+
+            const grammarQuestions = await this.questionRepository
+                .createQueryBuilder('question')
+                .where('question.level = :level', { level })
+                .andWhere('question.type = :type', { type: 'Grammar' })
+                .limit(grammarCounts[i])
+                .orderBy('RANDOM()')
+                .getMany();
+
+            if (grammarQuestions.length < grammarCounts[i]) {
+                throw new Error(
+                    `Not enough grammar questions for level ${level}. Needed ${grammarCounts[i]}, got ${grammarQuestions.length}`
+                );
+            }
+
+            finalQuestions.push(...vocabQuestions, ...grammarQuestions);
         }
 
-        finalQuestions.push(...vocabQuestions, ...grammarQuestions);
+        return finalQuestions;
     }
-
-    return finalQuestions;
-}
-
 
 }
