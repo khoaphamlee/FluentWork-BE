@@ -40,7 +40,7 @@ export class TestsController {
   
     @Post()
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.Learner)
+    @Roles(UserRole.Learner, UserRole.Admin, UserRole.Instructor)
     @ApiOperation({ summary: 'Create a test' })
     @ApiBody({
     type: CreateTestDto,
@@ -60,8 +60,8 @@ export class TestsController {
     @ApiResponse({ status: 201, description: 'Test created successfully.' })
     @ApiResponse({ status: 400, description: 'Validation error.' })
     create(@Request() req, @Body() createTestDto: CreateTestDto) {
-    const user = req.user;
-    return this.testsService.create(user, createTestDto);
+        const user = req.user;
+        return this.testsService.create(user, createTestDto);
     }
 
     @Post('placement')
@@ -78,6 +78,7 @@ export class TestsController {
     },
     })
     @ApiResponse({ status: 201, description: 'Placement test created.' })
+    @ApiResponse({ status: 400, description: 'User has already taken the placement test.' })
     createPlacement(@Request() req, @Body() dto: CreatePlacementTestDto) {
         console.log('👤 Logged in user from request:', req.user);
         const user = req.user as any;
@@ -148,11 +149,11 @@ export class TestsController {
     @ApiResponse({ status: 201, description: 'Test submitted successfully.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
     submitTest(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: SubmitTestDto,
     @Request() req: any,
     ) {
-        const userId = req.user.userId;
+        const userId = req.user.user.id;
         return this.testsService.submitTest(+id, dto.answers, userId);
     }
 
@@ -168,9 +169,24 @@ export class TestsController {
     @Body() dto: SubmitTestDto,
     @Request() req: any,
     ) {
-        const userId = req.user.userId;
+        const userId = req.user.id;
         return this.testsService.submitPlacementTest(id, dto, userId);
     }
+
+    @Post('submit-placement')
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Submit the most recent placement test and assign level' })
+    @ApiBody({ type: SubmitTestDto })
+    @ApiResponse({ status: 201, description: 'Placement test submitted and level assigned.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized.' })
+    submitCurrentPlacementTest(
+    @Body() dto: SubmitTestDto,
+    @Request() req: any,
+    ) {
+        const userId = req.user.id;
+        return this.testsService.submitCurrentPlacementTest(userId, dto);
+    }
+
 }
   
   

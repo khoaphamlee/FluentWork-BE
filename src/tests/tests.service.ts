@@ -22,6 +22,7 @@ import { SubmitTestDto } from './dto/submit-test.dto';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { CreatePlacementTestDto } from './dto/create-placement-test.dto';
+import { ValidationError } from 'class-validator';
 
 @Injectable()
 export class TestsService {
@@ -203,7 +204,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   if (existingTest) {
     console.log('⚠️ User already has a placement test. Returning existing test.');
     console.log('📌 Existing Test ID:', existingTest.id, '| Template ID:', existingTest.testTemplate.id, '| User ID:', existingTest.user.id);
-    return existingTest;
+    throw new BadRequestException('Learner has already taken the placement test.');
   }
 
   // 4. Tạo bài test mới
@@ -438,10 +439,11 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   ) {
     const test = await this.testRepository.findOne({
       where: { id: testId },
-      relations: ['testQuestions', 'testQuestions.question'],
+      relations: ['user', 'testQuestions', 'testQuestions.question'],
     });
 
     if (!test) throw new NotFoundException('Test not found');
+
     if (test.user.id !== userId)
       throw new BadRequestException('User does not own this test');
 
@@ -474,17 +476,23 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     test.total_incorrect_answer = test.testQuestions.length - correctAnswers;
     await this.testRepository.save(test);
 
-    const learnerProfile = await this.learnerProfileRepository.findOne({
+    let learnerProfile = await this.learnerProfileRepository.findOne({
       where: {
         user: {
           id: userId,
         },
       },
-      relations: ['user'], // nếu cần lấy thêm thông tin user
+      relations: ['user'],
     });
 
-    if (!learnerProfile)
-      throw new NotFoundException('Learner profile not found');
+    if (!learnerProfile) {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('User not found');
+
+        learnerProfile = this.learnerProfileRepository.create({
+            user,
+        });
+    }
 
     if (correctAnswers >= 9) {
       learnerProfile.level = Level.ADVANCED;
@@ -503,6 +511,25 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     };
   }
 
+  async submitCurrentPlacementTest(userId: number, dto: SubmitTestDto) {
+  // Tìm bài test gần nhất dạng placement
+  const currentPlacementTest = await this.testRepository.findOne({
+    where: {
+      user: { id: userId },
+      testTemplate: { type: 'Mixed' },
+    },
+    relations: ['testTemplate', 'user'],
+    order: {
+      test_date: 'DESC', // hoặc createdAt nếu có
+    },
+  });
+
+  if (!currentPlacementTest)
+    throw new NotFoundException('No current placement test found for user.');
+
+  return this.submitPlacementTest(currentPlacementTest.id, dto, userId);
+}
+
   async getPlacementTestForUser(userId: number) {
   if (!userId) {
     throw new NotFoundException(`User ${userId} does not found`);
@@ -514,10 +541,15 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     .leftJoinAndSelect('test.testQuestions', 'testQuestions')
     .leftJoinAndSelect('testQuestions.question', 'question')
     .leftJoinAndSelect('test.testMistakes', 'testMistakes')
-    .where('test.user = :userId', { userId }) // ✅ fix 1
-    .andWhere('testTemplate.type = :type', { type: 'Mixed' }) // ✅ fix 2
-    .andWhere('testTemplate.level = :level', { level: 'All' }) // ✅ fix 3
+    .where('test.user = :userId', { userId })
+    .andWhere('testTemplate.type = :type', { type: 'Mixed' })
+    .andWhere('testTemplate.level = :level', { level: 'All' }) 
+    .orderBy('test.test_date', 'DESC')
     .getMany();
+
+    for (const test of placementTest) {
+        test.testQuestions.sort((a, b) => a.id - b.id);
+    }
 
   if (!placementTest) {
     throw new NotFoundException(`User ${userId} does not have a placement test`);
