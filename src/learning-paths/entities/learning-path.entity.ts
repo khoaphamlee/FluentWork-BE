@@ -29,6 +29,9 @@ import { Level } from 'src/enum/level.enum';
     })
     level: Level;
   
+    @Column({ type: 'text', array: true, nullable: true }) 
+    topics: string[];
+ 
     @Column({ length: 255 })
     title: string;
   

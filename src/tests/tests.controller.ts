@@ -142,7 +142,8 @@ export class TestsController {
     }
 
     @Post(':id/submit')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.Learner)
     @ApiOperation({ summary: 'Submit answers for a test' })
     @ApiParam({ name: 'id', type: Number })
     @ApiBody({ type: SubmitTestDto })
@@ -158,7 +159,8 @@ export class TestsController {
     }
 
     @Post(':id/submit-placement')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.Learner)
     @ApiOperation({ summary: 'Submit a placement test and auto assign level' })
     @ApiParam({ name: 'id', type: Number })
     @ApiBody({ type: SubmitTestDto })
@@ -174,7 +176,8 @@ export class TestsController {
     }
 
     @Post('submit-placement')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.Learner)
     @ApiOperation({ summary: 'Submit the most recent placement test and assign level' })
     @ApiBody({ type: SubmitTestDto })
     @ApiResponse({ status: 201, description: 'Placement test submitted and level assigned.' })
