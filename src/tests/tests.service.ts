@@ -406,14 +406,14 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     const totalQuestions = test.testQuestions.length;
     const score = correctCount / totalQuestions;
 
-    if (score >= 0.7) {
-      if (learnerProfile.level === Level.BEGINNER) {
-        learnerProfile.level = Level.INTERMEDIATE;
-      } else if (learnerProfile.level === Level.INTERMEDIATE) {
-        learnerProfile.level = Level.ADVANCED;
-      }
-      await this.learnerProfileRepository.save(learnerProfile);
-    }
+    // if (score >= 0.7) {
+    //   if (learnerProfile.level === Level.BEGINNER) {
+    //     learnerProfile.level = Level.INTERMEDIATE;
+    //   } else if (learnerProfile.level === Level.INTERMEDIATE) {
+    //     learnerProfile.level = Level.ADVANCED;
+    //   }
+    //   await this.learnerProfileRepository.save(learnerProfile);
+    // }
 
     const submittedAnswers = await this.testAnswerRepository.find({
       where: {
@@ -426,7 +426,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
       message: 'Test submitted successfully',
       correctAnswers: correctCount,
       totalQuestions,
-      updatedLevel: learnerProfile.level,
+    //   updatedLevel: learnerProfile.level,
       answers: submittedAnswers,
     };
   }

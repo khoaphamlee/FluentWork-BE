@@ -42,6 +42,14 @@ export class QuestionsService {
         }),
     );
 
+    if (createQuestionDto.options.length < 4) {
+        throw new Error('A question must have at least 4 options');
+    }
+    if (!createQuestionDto.options.some(opt => opt.is_correct)) {
+        throw new Error('At least one option must be marked as correct');
+    }
+
+
     await this.optionRepository.save(optionEntities);
 
     savedQuestion.options = optionEntities;

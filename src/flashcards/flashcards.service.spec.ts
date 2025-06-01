@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Flashcard } from './entities/flashcard.entity';
-import { Repository } from 'typeorm';
 import { FlashcardsService } from './flashcards.service';
 import { CreateFlashcardDto } from './dto/create-flashcard.dto';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
@@ -43,7 +42,6 @@ describe('FlashcardsService', () => {
         ...createDto,
       };
 
-      // mock repo behavior
       flashcardRepo.create.mockReturnValue(fakeFlashcard);
       flashcardRepo.save.mockResolvedValue(fakeFlashcard);
 
@@ -59,6 +57,24 @@ describe('FlashcardsService', () => {
         word: createDto.word,
         definition: createDto.definition,
       });
+    });
+
+    it('should throw an error if flashcard creation fails', async () => {
+      const failDto: CreateFlashcardDto = {
+        topic: VocabularyTopic.BUSINESS,
+        word: 'FailTest',
+        definition: 'Should not be created',
+      };
+
+      const errorMessage = 'Database save failed';
+
+      flashcardRepo.create.mockReturnValue(failDto);
+      flashcardRepo.save.mockRejectedValue(new Error(errorMessage));
+
+      await expect(service.create(failDto)).rejects.toThrowError(errorMessage);
+
+      expect(flashcardRepo.create).toHaveBeenCalledWith(failDto);
+      expect(flashcardRepo.save).toHaveBeenCalled();
     });
   });
 });

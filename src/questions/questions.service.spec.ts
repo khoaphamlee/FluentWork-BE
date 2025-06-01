@@ -79,11 +79,9 @@ describe('QuestionsService', () => {
         question: fakeQuestion,
       }));
 
-      // Mock implementation
       questionRepo.create.mockReturnValue(fakeQuestion);
       questionRepo.save.mockResolvedValue(fakeQuestion);
 
-      // optionRepo.create should be called individually
       optionRepo.create.mockImplementation((opt) => ({
         id: Math.floor(Math.random() * 1000),
         ...opt,
@@ -93,10 +91,8 @@ describe('QuestionsService', () => {
         Promise.resolve(options.map((opt, i) => ({ ...opt, id: i + 1 })))
       );
 
-      // Run service logic
       const result = await service.create(createDto);
 
-      // Assert question creation
       expect(questionRepo.create).toHaveBeenCalledWith({
         type: createDto.type,
         vocabulary_topic: createDto.vocabulary_topic,
@@ -107,7 +103,6 @@ describe('QuestionsService', () => {
       });
       expect(questionRepo.save).toHaveBeenCalledWith(fakeQuestion);
 
-      // Assert options creation
       createDto.options.forEach((opt) => {
         expect(optionRepo.create).toHaveBeenCalledWith({
           ...opt,
@@ -127,9 +122,33 @@ describe('QuestionsService', () => {
         )
       );
 
-      // Final result check
       expect(result).toHaveProperty('options');
       expect(result.options).toHaveLength(4);
+    });
+
+    it('should throw an error if less than 4 options are provided', async () => {
+      const invalidDto = {
+        ...createDto,
+        options: [
+          { option_text: 'Quick', is_correct: true },
+          { option_text: 'Slow', is_correct: false },
+        ],
+      };
+
+      await expect(service.create(invalidDto)).rejects.toThrowError(
+        'A question must have at least 4 options',
+      );
+    });
+
+    it('should throw an error if no correct option is provided', async () => {
+      const invalidDto = {
+        ...createDto,
+        options: createDto.options.map(opt => ({ ...opt, is_correct: false })),
+      };
+
+      await expect(service.create(invalidDto)).rejects.toThrowError(
+        'At least one option must be marked as correct',
+      );
     });
   });
 });
