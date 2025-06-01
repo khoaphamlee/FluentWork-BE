@@ -34,12 +34,12 @@ export class CreateLessonDto {
     @ApiPropertyOptional({ enum: VocabularyTopic, description: 'Chủ đề từ vựng nếu là bài từ vựng', example: VocabularyTopic.BUSINESS })
     @IsEnum(VocabularyTopic)
     @IsOptional()
-    vocabulary_topic?: VocabularyTopic;
+    vocabulary_topic?: VocabularyTopic | null;
 
     @ApiPropertyOptional({ enum: GrammarTopic, description: 'Chủ đề ngữ pháp nếu là bài ngữ pháp', example: null })
     @IsEnum(GrammarTopic)
     @IsOptional()
-    grammar_topic?: GrammarTopic;
+    grammar_topic?: GrammarTopic | null;
 
     @ApiProperty({ description: 'Nội dung chính của bài học (HTML hoặc plain text)', example: 'This is the lesson content...' })
     @IsString()

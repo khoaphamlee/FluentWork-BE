@@ -64,5 +64,5 @@ export class CreateTestDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber()
-  testTemplateId: number;
+  testTemplateId?: number;
 }

@@ -13,7 +13,7 @@ import { User } from '../users/entities/user.entity';
 import { TestTemplate } from 'src/test-templates/entities/test-template.entity';
 import { TestQuestion } from 'src/test-questions/entities/test-question.entity';
 import { TestTemplatesService } from 'src/test-templates/test-templates.service';
-import { Question } from 'src/questions/entities/question.entity'; // Import Question entity
+import { Question } from 'src/questions/entities/question.entity';
 import { Level } from 'src/enum/level.enum';
 import { LearnerProfile } from 'src/learner-profiles/entities/learner-profile.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
@@ -22,7 +22,6 @@ import { SubmitTestDto } from './dto/submit-test.dto';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { CreatePlacementTestDto } from './dto/create-placement-test.dto';
-import { ValidationError } from 'class-validator';
 
 @Injectable()
 export class TestsService {

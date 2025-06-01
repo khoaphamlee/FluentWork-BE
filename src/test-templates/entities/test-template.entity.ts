@@ -64,7 +64,7 @@ export class TestTemplate {
     updated_at: Date;
 
     @OneToMany(() => Test, (test) => test.testTemplate)
-    test: Test;
+    test: Test[];
 
     @OneToMany(() => Question, (question) => question.testTemplate) 
     questions: Question[];
