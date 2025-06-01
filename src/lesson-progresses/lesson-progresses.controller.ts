@@ -64,7 +64,7 @@ export class LessonProgressController {
     },
   })
   async create(@Request() req, @Body() dto: CreateLessonProgressDto) {
-    return this.service.create(req.user.userId, dto.lessonId);
+    return this.service.create(req.user.id, dto.lessonId);
   }
 
   @Get()
@@ -90,7 +90,7 @@ export class LessonProgressController {
     },
   })
   async findAll(@Request() req) {
-    return this.service.findByUser(req.user.userId);
+    return this.service.findByUser(req.user.id);
   }
 
   @Patch(':id')
@@ -166,7 +166,7 @@ export class LessonProgressController {
     @Request() req,
     @Param('lessonId') lessonId: number,
   ) {
-    return this.service.findByUserAndLesson(req.user.userId, lessonId);
+    return this.service.findByUserAndLesson(req.user.id, lessonId);
   }
 }
 

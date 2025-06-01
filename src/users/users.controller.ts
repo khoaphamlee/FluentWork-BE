@@ -110,7 +110,7 @@ export class UsersController {
   })
   @UseGuards(JwtAuthGuard)
   updateProfile(@Request() req, @Body() dto: UpdateUserProfileDto) {
-    return this.usersService.updateProfile(req.user.userId, dto);
+    return this.usersService.updateProfile(req.user.id, dto);
   }
 
   @Patch('change-password')
@@ -149,7 +149,7 @@ export class UsersController {
   })
   @UseGuards(JwtAuthGuard)
   async changePassword(@Request() req, @Body() body: ChangePasswordDto) {
-    return this.usersService.changePassword(req.user.userId, body);
+    return this.usersService.changePassword(req.user.id, body);
   }
 
   @Get('')
