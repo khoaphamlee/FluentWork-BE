@@ -31,7 +31,7 @@ export class CreateQuestionDto {
     })
     @IsOptional()
     @IsEnum(VocabularyTopic)
-    vocabulary_topic?: VocabularyTopic;
+    vocabulary_topic?: VocabularyTopic | null;
   
     @ApiProperty({
       description: 'The grammar topic',
@@ -40,7 +40,7 @@ export class CreateQuestionDto {
     })
     @IsOptional()
     @IsEnum(GrammarTopic)
-    grammar_topic?: GrammarTopic;
+    grammar_topic?: GrammarTopic | null;
   
     @ApiProperty({
       description: 'The level of the question (Beginner, Intermediate, or Advanced)',
