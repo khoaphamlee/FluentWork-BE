@@ -473,6 +473,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     test.score = correctAnswers;
     test.total_correct_answer = correctAnswers;
     test.total_incorrect_answer = test.testQuestions.length - correctAnswers;
+    test.is_submitted = true;
     await this.testRepository.save(test);
 
     let learnerProfile = await this.learnerProfileRepository.findOne({
@@ -539,6 +540,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     .leftJoinAndSelect('test.testTemplate', 'testTemplate')
     .leftJoinAndSelect('test.testQuestions', 'testQuestions')
     .leftJoinAndSelect('testQuestions.question', 'question')
+    .leftJoinAndSelect('question.options', 'options')
     .leftJoinAndSelect('test.testMistakes', 'testMistakes')
     .where('test.user = :userId', { userId })
     .andWhere('testTemplate.type = :type', { type: 'Mixed' })
