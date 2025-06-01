@@ -13,11 +13,6 @@ import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTestDto {
-  @ApiProperty({ example: 2 })
-  @IsNotEmpty()
-  @IsNumber()
-  userId: number;
-
   @ApiProperty({ enum: ['Beginner', 'Intermediate', 'Advanced', 'All'] })
   @IsEnum(['Beginner', 'Intermediate', 'Advanced', 'All'])
   level: 'Beginner' | 'Intermediate' | 'Advanced' | 'All';

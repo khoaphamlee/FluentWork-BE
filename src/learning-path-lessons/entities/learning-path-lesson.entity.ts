@@ -10,6 +10,9 @@ import {
   import { LearningPath } from 'src/learning-paths/entities/learning-path.entity';
   import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { Topic } from 'src/enum/topic.enum';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
+
   
   @Entity({ name: 'learning_path_lessons' })
 export class LearningPathLesson {
@@ -32,6 +35,13 @@ export class LearningPathLesson {
 
   @Column({ type: 'int' })
   order: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+    createdAt: Date;
+
+    @UpdateDateColumn({ name: 'updated_at' })
+    updatedAt: Date;
+
 }
 
   
