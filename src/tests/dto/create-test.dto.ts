@@ -18,7 +18,7 @@ export class CreateTestDto {
   @IsNumber()
   userId: number;
 
-  @ApiProperty({ enum: ['Beginner', 'Intermediate', 'Advanced', 'All'], example: 'Intermediate' })
+  @ApiProperty({ enum: ['Beginner', 'Intermediate', 'Advanced', 'All'] })
   @IsEnum(['Beginner', 'Intermediate', 'Advanced', 'All'])
   level: 'Beginner' | 'Intermediate' | 'Advanced' | 'All';
 

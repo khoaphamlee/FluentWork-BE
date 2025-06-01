@@ -38,7 +38,6 @@ export class Test {
     @Column({
             type: 'enum',
             enum: Level,
-            default: Level.BEGINNER,
         })
     level: Level;
   
