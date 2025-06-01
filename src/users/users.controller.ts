@@ -77,7 +77,7 @@ export class UsersController {
   })
   @UseGuards(JwtAuthGuard) // API chỉ cho phép truy cập nếu người dùng đã đăng nhập và gửi kèm access_token hợp lệ trong request.
   getProfile(@Request() req) {
-    return this.usersService.getProfile(req.user.userId);
+    return this.usersService.getProfile(req.user.id);
   }
 
   @Patch('profile')
