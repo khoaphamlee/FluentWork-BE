@@ -655,7 +655,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     throw new NotFoundException(`User ${userId} does not found`);
   }
 
-  const placementTests = await this.testRepository
+  const placementTest = await this.testRepository
     .createQueryBuilder('test')
     .leftJoinAndSelect('test.testTemplate', 'testTemplate')
     .leftJoinAndSelect('test.testQuestions', 'testQuestions')
@@ -667,39 +667,40 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     .andWhere('testTemplate.type = :type', { type: 'Mixed' })
     .andWhere('testTemplate.level = :level', { level: 'All' })
     .orderBy('test.test_date', 'DESC')
-    .getMany();
+    .getOne();
 
-  if (!placementTests || placementTests.length === 0) {
+  if (!placementTest) {
     throw new NotFoundException(`User ${userId} does not have a placement test`);
   }
 
-  const detailedTests = placementTests.map((test) => {
-    test.testQuestions.sort((a, b) => a.id - b.id);
+  // Sắp xếp câu hỏi theo thứ tự ID
+  placementTest.testQuestions.sort((a, b) => a.id - b.id);
 
-    const questions = test.testQuestions.map((tq) => ({
-      questionId: tq.question.id,
-      questionText: tq.question.question_text,
-      explanation: tq.question.explanation,
-      options: tq.question.options.map((opt) => ({
-        id: opt.id,
-        text: opt.option_text,
-        isCorrect: opt.is_correct,
-      })),
-      selectedOptionId: tq.answer?.option?.id || null,
-      isCorrect: tq.answer?.is_correct || false,
-    }));
+  // Chuẩn bị danh sách câu hỏi
+  const questions = placementTest.testQuestions.map((tq) => ({
+    questionId: tq.question.id,
+    questionText: tq.question.question_text,
+    explanation: tq.question.explanation,
+    options: tq.question.options.map((opt) => ({
+      id: opt.id,
+      text: opt.option_text,
+      isCorrect: opt.is_correct,
+    })),
+    selectedOptionId: tq.answer?.option?.id || null,
+    isCorrect: tq.answer?.is_correct || false,
+  }));
 
-    return {
-      testId: test.id,
-      testDate: test.test_date,
-      score: test.score,
-      isSubmitted: test.is_submitted,
-      level: test.level,
-      questions,
-    };
-  });
-
-  return detailedTests;
+  // Trả về chi tiết bài kiểm tra
+  return {
+    testId: placementTest.id,
+    testDate: placementTest.test_date,
+    score: placementTest.score,
+    isSubmitted: placementTest.is_submitted,
+    level: placementTest.level,
+    duration: placementTest.duration,
+    template: placementTest.testTemplate,
+    questions,
+  };
 }
 
 
@@ -714,8 +715,8 @@ async getTestForUser(userId: number) {
     .leftJoinAndSelect('test.testQuestions', 'testQuestions')
     .leftJoinAndSelect('testQuestions.question', 'question')
     .leftJoinAndSelect('question.options', 'options')
-    .leftJoinAndSelect('testQuestions.answer', 'answer') // ✅ join TestAnswer
-    .leftJoinAndSelect('answer.option', 'selectedOption') // ✅ join selected option
+    .leftJoinAndSelect('testQuestions.answer', 'answer')
+    .leftJoinAndSelect('answer.option', 'selectedOption')
     .leftJoinAndSelect('test.testMistakes', 'testMistakes')
     .where('test.user = :userId', { userId })
     .andWhere(
@@ -730,6 +731,9 @@ async getTestForUser(userId: number) {
   }
 
   test.testQuestions.sort((a, b) => a.id - b.id);
+
+  const template = test.testTemplate;
+  const duration = test.duration;
 
   const questions = test.testQuestions.map((tq) => ({
     questionId: tq.question.id,
@@ -750,6 +754,8 @@ async getTestForUser(userId: number) {
     score: test.score,
     isSubmitted: test.is_submitted,
     level: test.level,
+    duration: duration,
+    template: template,
     questions,
   };
 }
