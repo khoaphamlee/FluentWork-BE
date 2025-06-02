@@ -7,6 +7,7 @@ import { LearningPath } from './entities/learning-path.entity';
 import { LearningPathLesson } from 'src/learning-path-lessons/entities/learning-path-lesson.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
 import { Topic } from 'src/enum/topic.enum';
+import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 
 @Injectable()
 export class LearningPathsService {
@@ -20,44 +21,33 @@ export class LearningPathsService {
   ) {}
 
   async create(dto: CreateLearningPathDto, userId: number) {
-  // Tạo LearningPath
+  // Tự lấy grammar topic, không cần FE truyền
+  const allGrammarTopics = Object.values(GrammarTopic);
+  const allTopics = [...dto.vocabularyTopics, ...allGrammarTopics]; // Đây là topics lưu trong DB
+
   const learningPath = await this.learningPathRepository.save({
     level: dto.level,
     title: dto.title,
     description: dto.description,
-    topics: dto.topics, // sửa 'topic' thành 'topics'
+    topics: allTopics, // Lưu cả vocab + grammar vào bảng learning_paths
     user: { id: userId },
   });
 
-  // Lấy tất cả lessons theo level
   const lessons = await this.lessonRepository.find({
-    where: { level: dto.level }, // nếu dùng quan hệ
+    where: { level: dto.level },
   });
 
-  // Lọc lessons theo topics được chọn
   const filteredLessons = lessons.filter((lesson) => {
-  const grammarTopic = lesson.grammar_topic;
-  const vocabTopic = lesson.vocabulary_topic;
+    return (
+      (lesson.type === Topic.GRAMMAR &&
+        lesson.grammar_topic &&
+        allGrammarTopics.includes(lesson.grammar_topic)) ||
+      (lesson.type === Topic.VOCABULARY &&
+        lesson.vocabulary_topic &&
+        dto.vocabularyTopics.includes(lesson.vocabulary_topic))
+    );
+  });
 
-  return (
-    (lesson.type === Topic.GRAMMAR && grammarTopic && dto.topics.some(topic => topic.toLowerCase() === grammarTopic.toLowerCase())) ||
-    (lesson.type === Topic.VOCABULARY && vocabTopic && dto.topics.some(topic => topic.toLowerCase() === vocabTopic.toLowerCase()))
-  );
-});
-
-
-
-    console.log('dto.topics:', dto.topics);
-    console.log('lessons:', lessons.map(l => ({
-    id: l.id,
-    type: l.type,
-    grammar_topic: l.grammar_topic,
-    vocabulary_topic: l.vocabulary_topic
-    })));
-
-  console.log('Filtered lessons:', filteredLessons);
-
-  // Tạo các bản ghi LearningPathLesson tương ứng
   const learningPathLessons = filteredLessons.map((lesson, index) => {
     const topic =
       lesson.type === Topic.GRAMMAR
@@ -65,21 +55,18 @@ export class LearningPathsService {
         : lesson.vocabulary_topic ?? 'Unknown';
 
     return this.learningPathLessonRepository.create({
-      learningPath, // Truyền đúng object LearningPath
+      learningPath,
       lesson,
       type: lesson.type,
-      topic: String(topic), // ép kiểu sang string
+      topic: String(topic),
       order: index + 1,
     });
   });
 
-  // Lưu các bản ghi LearningPathLesson
   await this.learningPathLessonRepository.save(learningPathLessons);
 
   return learningPath;
 }
-
-
 async findByUser(userId: number): Promise<LearningPath> {
   const learningPath = await this.learningPathRepository.findOne({
     where: { user: { id: userId } },

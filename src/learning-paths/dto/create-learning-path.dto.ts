@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Level } from 'src/enum/level.enum';
+import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { ArrayNotEmpty, IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CreateLearningPathDto {
@@ -19,12 +20,13 @@ export class CreateLearningPathDto {
   description?: string;
 
   @ApiProperty({
-    example: ['TENSES', 'BUSINESS'], // ví dụ các topic thuộc GrammarTopic và VocabularyTopic
-    description: 'List of grammar or vocabulary topics',
-    type: [String],
+    example: [VocabularyTopic.BUSINESS],
+    description: 'List of vocabulary topics selected by the user',
+    enum: VocabularyTopic,
+    isArray: true,
   })
   @IsArray()
   @ArrayNotEmpty()
-  @IsString({ each: true })
-  topics: string[];
+  @IsEnum(VocabularyTopic, { each: true })
+  vocabularyTopics: VocabularyTopic[];
 }
