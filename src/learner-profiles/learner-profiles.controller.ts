@@ -20,6 +20,7 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { Request } from '@nestjs/common';
 
 @ApiTags('Learner Profiles')
 @ApiBearerAuth()
@@ -29,9 +30,47 @@ export class LearnerProfilesController {
     private readonly learnerProfilesService: LearnerProfilesService,
   ) {}
 
+  @Get('me')
+  @ApiOperation({ summary: 'Learner xem hồ sơ cá nhân của mình' })
+  @ApiResponse({
+    status: 200,
+    description: 'Thông tin hồ sơ của Learner hiện tại',
+    schema: {
+      example: {
+        id: 1,
+        user: {
+          id: 142,
+          username: 'learner',
+          email: 'learner@example.com',
+          full_name: 'Learner',
+          role: 'Learner',
+        },
+        level: 'Intermediate',
+        total_lessons_completed: 5,
+        created_at: '2025-05-29T06:14:26.266Z',
+        updated_at: '2025-05-29T06:14:26.266Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'LearnerProfile not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'LearnerProfile not found',
+        error: 'Not Found',
+      },
+    },
+  })
+  @UseGuards(JwtAuthGuard)
+  getCurrentLearnerProfile(@Request() req) {
+    return this.learnerProfilesService.findByUserId(req.user.id);
+  }
+
   @Post()
   @Roles('Learner')
-  @ApiOperation({ summary: 'Learner tạo hồ sơ cá nhân' }) 
+  @ApiOperation({ summary: 'Learner tạo hồ sơ cá nhân' })
   @ApiResponse({
     status: 201,
     description: 'LearnerProfile created successfully',

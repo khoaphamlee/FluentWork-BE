@@ -87,4 +87,17 @@ export class LearnerProfilesService {
       throw new NotFoundException(`LearnerProfile not found`);
     }
   }
+
+  async findByUserId(userId: number) {
+    const profile = await this.learnerProfileRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
+
+    if (!profile) {
+      throw new NotFoundException('LearnerProfile not found');
+    }
+
+    return profile;
+  }
 }
