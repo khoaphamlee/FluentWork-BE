@@ -7,10 +7,12 @@ import {
   IsArray,
   IsString,
   IsDate,
+  Validate,
 } from 'class-validator';
 import { GrammarTopic } from 'src/enum/grammar-topic.enum';
 import { VocabularyTopic } from 'src/enum/vocabulary-topic.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TestTopicValidator } from 'src/validator/test_topic.validator';
 
 export class CreateTestDto {
   @ApiProperty({ enum: ['Beginner', 'Intermediate', 'Advanced', 'All'] })
@@ -29,17 +31,17 @@ export class CreateTestDto {
   @IsOptional()
   @IsArray()
   @IsEnum(VocabularyTopic, { each: true })
-  vocabulary_topic?: VocabularyTopic[];
+  vocabulary_topic?: VocabularyTopic[] | null;
 
   @ApiPropertyOptional({
     enum: GrammarTopic,
     isArray: true,
-    example: null,
+    example: [],
   })
   @IsOptional()
   @IsArray()
   @IsEnum(GrammarTopic, { each: true })
-  grammar_topic?: GrammarTopic[];
+  grammar_topic?: GrammarTopic[] | null;
 
   @ApiProperty({ example: '15m' })
   @IsNotEmpty()
@@ -60,9 +62,4 @@ export class CreateTestDto {
   @IsOptional()
   @IsNumber()
   total_incorrect_answers: number = 0;
-
-  @ApiPropertyOptional({ example: 1 })
-  @IsOptional()
-  @IsNumber()
-  testTemplateId?: number;
 }

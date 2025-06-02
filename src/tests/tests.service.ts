@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { Test } from './entities/test.entity';
@@ -53,12 +53,33 @@ export class TestsService {
   ) {}
 
   async create(user: User, dto: CreateTestDto): Promise<Test> {
+    const { type, vocabulary_topic, grammar_topic } = dto;
+
+    if (type === 'Vocabulary') {
+        if (grammar_topic?.length) {
+        throw new BadRequestException('grammar_topic phải rỗng khi type là Vocabulary');
+        }
+        dto.grammar_topic = null;
+    } else if (type === 'Grammar') {
+        if (vocabulary_topic?.length) {
+        throw new BadRequestException('vocabulary_topic phải rỗng khi type là Grammar');
+        }
+        dto.vocabulary_topic = null;
+    } else if (type === 'Mixed') {
+        if (!vocabulary_topic?.length || !grammar_topic?.length) {
+        throw new BadRequestException(
+            'Cả vocabulary_topic và grammar_topic đều bắt buộc khi type là Mixed',
+        );
+        }
+    }
+
     let template = await this.findOrCreateTemplate(dto);
 
     const test = this.testRepository.create({
         user: { id: user.id },
         testTemplate: template,
         score: 0,
+        level: dto.level as Level,
         duration: dto.duration,
         test_date: dto.test_date ?? new Date(),
         total_correct_answer: 0,
@@ -107,7 +128,7 @@ export class TestsService {
 
   if (sortedVocabulary?.length) {
     templateQuery.andWhere(
-      'template.vocabulary_topic @> :vocabulary::varchar[] AND :vocabulary::varchar[] @> template.vocabulary_topic',
+      `template.vocabulary_topic::text[] @> :vocabulary AND :vocabulary @> template.vocabulary_topic::text[]`,
       { vocabulary: sortedVocabulary },
     );
   } else {
@@ -116,7 +137,7 @@ export class TestsService {
 
   if (sortedGrammar?.length) {
     templateQuery.andWhere(
-      'template.grammar_topic @> :grammar::varchar[] AND :grammar::varchar[] @> template.grammar_topic',
+      `template.grammar_topic::text[] @> :grammar AND :grammar @> template.grammar_topic::text[]`,
       { grammar: sortedGrammar },
     );
   } else {
@@ -365,100 +386,138 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   }
 
   async submitTest(
-    testId: number,
-    answers: { testQuestionId: number; selectedOptionId: number }[],
-    user: User,
-  ) {
-    const test = await this.testRepository.findOne({
-      where: { id: testId },
-      relations: ['testQuestions', 'user'],
-    });
+  testId: number,
+  dto: SubmitTestDto,
+  userId: number,
+) {
+  const test = await this.testRepository.findOne({
+    where: { id: testId },
+    relations: ['testQuestions', 'user'],
+  });
 
-    if (!test) {
-      throw new NotFoundException('Test not found');
-    }
-
-    if (test.user.id !== user.id) {
-      throw new ForbiddenException('You are not allowed to submit this test');
-    }
-
-    let correctCount = 0;
-
-    for (const answerDto of answers) {
-      const testQuestion = await this.testQuestionRepository.findOne({
-        where: { id: answerDto.testQuestionId },
-        relations: ['question'],
-      });
-
-      if (!testQuestion) {
-        throw new NotFoundException(
-          `TestQuestion ${answerDto.testQuestionId} not found`,
-        );
-      }
-
-      const option = await this.optionRepository.findOne({
-        where: { id: answerDto.selectedOptionId },
-      });
-
-      if (!option) {
-        throw new NotFoundException(
-          `Option ${answerDto.selectedOptionId} not found`,
-        );
-      }
-
-      const isCorrect = option.is_correct;
-
-      await this.testAnswerRepository.save({
-        testQuestion,
-        option,
-        is_correct: isCorrect,
-      });
-
-      if (isCorrect) {
-        correctCount++;
-      }
-    }
-
-    const learnerProfile = await this.learnerProfileRepository.findOne({
-      where: {
-        user: {
-          id: user.id,
-        },
-      },
-      relations: ['user'], // nếu cần lấy thêm thông tin user
-    });
-
-    if (!learnerProfile) {
-      throw new NotFoundException('Learner profile not found');
-    }
-
-    const totalQuestions = test.testQuestions.length;
-    const score = correctCount / totalQuestions;
-
-    // if (score >= 0.7) {
-    //   if (learnerProfile.level === Level.BEGINNER) {
-    //     learnerProfile.level = Level.INTERMEDIATE;
-    //   } else if (learnerProfile.level === Level.INTERMEDIATE) {
-    //     learnerProfile.level = Level.ADVANCED;
-    //   }
-    //   await this.learnerProfileRepository.save(learnerProfile);
-    // }
-
-    const submittedAnswers = await this.testAnswerRepository.find({
-      where: {
-        testQuestion: In(test.testQuestions.map((q) => q.id)),
-      },
-      relations: ['testQuestion', 'option'],
-    });
-
-    return {
-      message: 'Test submitted successfully',
-      correctAnswers: correctCount,
-      totalQuestions,
-    //   updatedLevel: learnerProfile.level,
-      answers: submittedAnswers,
-    };
+  if (!test) {
+    throw new NotFoundException('Test not found');
   }
+
+  if (test.user.id !== userId) {
+    throw new ForbiddenException('You are not allowed to submit this test');
+  }
+
+  let correctCount = 0;
+
+  for (const answerDto of dto.answers) {
+    const testQuestion = await this.testQuestionRepository.findOne({
+      where: { id: answerDto.testQuestionId },
+      relations: ['question'],
+    });
+
+    if (!testQuestion) {
+      throw new NotFoundException(
+        `TestQuestion ${answerDto.testQuestionId} not found`,
+      );
+    }
+
+    const option = await this.optionRepository.findOne({
+      where: { id: answerDto.selectedOptionId },
+    });
+
+    if (!option) {
+      throw new NotFoundException(
+        `Option ${answerDto.selectedOptionId} not found`,
+      );
+    }
+
+    const isCorrect = option.is_correct;
+
+    await this.testAnswerRepository.save({
+      testQuestion,
+      option,
+      is_correct: isCorrect,
+    });
+
+    if (isCorrect) {
+      correctCount++;
+    }
+  }
+
+  const learnerProfile = await this.learnerProfileRepository.findOne({
+    where: { user: { id: userId } },
+    relations: ['user'],
+  });
+
+  if (!learnerProfile) {
+    throw new NotFoundException('Learner profile not found');
+  }
+
+  // Truy vấn lại bài test kèm đầy đủ thông tin như placement test
+  const detailedTest = await this.testRepository.findOne({
+    where: { id: testId },
+    relations: [
+      'testQuestions',
+      'testQuestions.question',
+      'testQuestions.question.options',
+      'testQuestions.answer',
+      'testQuestions.answer.option',
+    ],
+  });
+
+  if (!detailedTest) {
+    throw new NotFoundException('Test not found after submission');
+  }
+
+  const totalQuestions = detailedTest.testQuestions.length;
+  const score = correctCount / totalQuestions;
+
+  const questionsWithAnswers = detailedTest.testQuestions.map((testQuestion) => ({
+    questionId: testQuestion.question.id,
+    questionText: testQuestion.question.question_text,
+    options: testQuestion.question.options.map((opt) => ({
+      id: opt.id,
+      text: opt.option_text,
+      isCorrect: opt.is_correct,
+    })),
+    selectedOptionId: testQuestion.answer?.option?.id || null,
+    isCorrect: testQuestion.answer?.is_correct || false,
+    explanation: testQuestion.question.explanation,
+  }));
+
+  return {
+    message: 'Test submitted successfully',
+    score,
+    correctAnswers: correctCount,
+    totalQuestions,
+    questions: questionsWithAnswers,
+  };
+}
+
+
+  async submitCurrentTest(
+  userId: number,
+  dto: SubmitTestDto,
+) {
+  // 1. Tìm bài test gần nhất không phải placement
+  const currentTest = await this.testRepository.findOne({
+    where: {
+      user: { id: userId },
+      testTemplate: {
+        type: Not('Mixed'),
+        level: Not('All'),
+      },
+    },
+    relations: ['testTemplate', 'user'],
+    order: {
+      test_date: 'DESC',
+    },
+  });
+
+  if (!currentTest) {
+    throw new NotFoundException('No current regular test found for user.');
+  }
+
+  // 2. Gọi submitTest() và return trực tiếp
+  return this.submitTest(currentTest.id, dto, userId);
+}
+
 
   async submitPlacementTest(
     testId: number,
@@ -535,10 +594,40 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
 
     await this.learnerProfileRepository.save(learnerProfile);
 
+    // Sau khi lưu learnerProfile
+    const detailedTest = await this.testRepository.findOne({
+        where: { id: test.id },
+        relations: [
+            'testQuestions',
+            'testQuestions.question',
+            'testQuestions.question.options',
+            'testQuestions.answer',
+            'testQuestions.answer.option',
+        ],
+    });
+
+    if (!detailedTest) throw new NotFoundException('Test not found');
+
+    const questionsWithAnswers = detailedTest.testQuestions.map((testQuestion) => {
+    return {
+        questionId: testQuestion.question.id,
+        questionText: testQuestion.question.question_text,
+        options: testQuestion.question.options.map((opt) => ({
+            id: opt.id,
+            text: opt.option_text,
+            isCorrect: opt.is_correct,
+        })),
+        selectedOptionId: testQuestion.answer?.option?.id || null,
+        isCorrect: testQuestion.answer?.is_correct || false,
+        explanation: testQuestion.question.explanation,
+    };
+    });
+
     return {
       message: 'Placement test submitted and level assigned.',
       score: correctAnswers,
       level: learnerProfile.level,
+      questions: questionsWithAnswers,
     };
   }
 
@@ -566,28 +655,103 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     throw new NotFoundException(`User ${userId} does not found`);
   }
 
-  const placementTest = await this.testRepository
+  const placementTests = await this.testRepository
     .createQueryBuilder('test')
     .leftJoinAndSelect('test.testTemplate', 'testTemplate')
     .leftJoinAndSelect('test.testQuestions', 'testQuestions')
     .leftJoinAndSelect('testQuestions.question', 'question')
     .leftJoinAndSelect('question.options', 'options')
-    .leftJoinAndSelect('test.testMistakes', 'testMistakes')
+    .leftJoinAndSelect('testQuestions.answer', 'answer') // ✅ Join câu trả lời
+    .leftJoinAndSelect('answer.option', 'selectedOption') // ✅ Join đáp án được chọn
     .where('test.user = :userId', { userId })
     .andWhere('testTemplate.type = :type', { type: 'Mixed' })
-    .andWhere('testTemplate.level = :level', { level: 'All' }) 
+    .andWhere('testTemplate.level = :level', { level: 'All' })
     .orderBy('test.test_date', 'DESC')
     .getMany();
 
-    for (const test of placementTest) {
-        test.testQuestions.sort((a, b) => a.id - b.id);
-    }
-
-  if (!placementTest) {
+  if (!placementTests || placementTests.length === 0) {
     throw new NotFoundException(`User ${userId} does not have a placement test`);
   }
 
-  return placementTest;
+  const detailedTests = placementTests.map((test) => {
+    test.testQuestions.sort((a, b) => a.id - b.id);
+
+    const questions = test.testQuestions.map((tq) => ({
+      questionId: tq.question.id,
+      questionText: tq.question.question_text,
+      explanation: tq.question.explanation,
+      options: tq.question.options.map((opt) => ({
+        id: opt.id,
+        text: opt.option_text,
+        isCorrect: opt.is_correct,
+      })),
+      selectedOptionId: tq.answer?.option?.id || null,
+      isCorrect: tq.answer?.is_correct || false,
+    }));
+
+    return {
+      testId: test.id,
+      testDate: test.test_date,
+      score: test.score,
+      isSubmitted: test.is_submitted,
+      level: test.level,
+      questions,
+    };
+  });
+
+  return detailedTests;
+}
+
+
+async getTestForUser(userId: number) {
+  if (!userId) {
+    throw new NotFoundException(`User ${userId} not found`);
+  }
+
+  const test = await this.testRepository
+    .createQueryBuilder('test')
+    .leftJoinAndSelect('test.testTemplate', 'testTemplate')
+    .leftJoinAndSelect('test.testQuestions', 'testQuestions')
+    .leftJoinAndSelect('testQuestions.question', 'question')
+    .leftJoinAndSelect('question.options', 'options')
+    .leftJoinAndSelect('testQuestions.answer', 'answer') // ✅ join TestAnswer
+    .leftJoinAndSelect('answer.option', 'selectedOption') // ✅ join selected option
+    .leftJoinAndSelect('test.testMistakes', 'testMistakes')
+    .where('test.user = :userId', { userId })
+    .andWhere(
+      `NOT (testTemplate.type = :type AND testTemplate.level = :level)`,
+      { type: 'Mixed', level: 'All' },
+    )
+    .orderBy('test.test_date', 'DESC')
+    .getOne();
+
+  if (!test) {
+    throw new NotFoundException(`User ${userId} does not have a regular test`);
+  }
+
+  test.testQuestions.sort((a, b) => a.id - b.id);
+
+  const questions = test.testQuestions.map((tq) => ({
+    questionId: tq.question.id,
+    questionText: tq.question.question_text,
+    explanation: tq.question.explanation,
+    options: tq.question.options.map((opt) => ({
+      id: opt.id,
+      text: opt.option_text,
+      isCorrect: opt.is_correct,
+    })),
+    selectedOptionId: tq.answer?.option?.id || null,
+    isCorrect: tq.answer?.is_correct ?? null, // Có thể null nếu chưa trả lời
+  }));
+
+  return {
+    testId: test.id,
+    testDate: test.test_date,
+    score: test.score,
+    isSubmitted: test.is_submitted,
+    level: test.level,
+    questions,
+  };
 }
 
 

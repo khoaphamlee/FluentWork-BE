@@ -11,6 +11,7 @@ import { Question } from 'src/questions/entities/question.entity';
 import { LearnerProfile } from 'src/learner-profiles/entities/learner-profile.entity';
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { OptionsModule } from 'src/options/options.module';
+import { TestTopicValidator } from 'src/validator/test_topic.validator';
 
 @Module({
   imports: [
@@ -18,6 +19,6 @@ import { OptionsModule } from 'src/options/options.module';
     TestTemplatesModule, OptionsModule
   ],
   controllers: [TestsController],
-  providers: [TestsService],
+  providers: [TestsService, TestTopicValidator],
 })
 export class TestsModule {}

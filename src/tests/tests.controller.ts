@@ -93,6 +93,18 @@ export class TestsController {
       return this.testsService.findAll();
     }
 
+    @Get('me')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.Learner)
+    @ApiOperation({ summary: 'Get the current user’s test' })
+    @ApiResponse({ status: 200, description: 'Test found.' })
+    @ApiResponse({ status: 404, description: 'Test not found.' })
+    getTestForUser(@Request() req) {
+        console.log('Request user:', req.user);
+        const userId = req.user.id;
+        return this.testsService.getTestForUser(userId);
+    }
+
     @Get('placement/me')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.Learner)
@@ -154,9 +166,25 @@ export class TestsController {
     @Body() dto: SubmitTestDto,
     @Request() req: any,
     ) {
-        const userId = req.user.user.id;
-        return this.testsService.submitTest(+id, dto.answers, userId);
+        const userId = req.user.id;
+        return this.testsService.submitTest(id, dto, userId);
     }
+
+    @Post('submit')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.Learner)
+    @ApiOperation({ summary: 'Submit answers for the most recent regular test' })
+    @ApiBody({ type: SubmitTestDto })
+    @ApiResponse({ status: 201, description: 'Test submitted successfully.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized.' })
+    submitCurrentTest(
+    @Body() dto: SubmitTestDto,
+    @Request() req: any,
+    ) {
+        const userId = req.user.id;
+        return this.testsService.submitCurrentTest(userId, dto);
+    }
+
 
     @Post(':id/submit-placement')
     @UseGuards(JwtAuthGuard, RolesGuard)
