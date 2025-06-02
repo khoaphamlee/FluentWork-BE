@@ -187,6 +187,32 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   if (!fullUser) throw new Error('User not found');
   console.log('👤 Full user ID:', fullUser.id, '| Username:', fullUser.username, '| Role:', fullUser.role);
 
+  let learnerProfile = await this.learnerProfileRepository.findOne({
+        where: { user: { id: user.id } },
+        relations: ['user'],
+    });
+
+    if (!learnerProfile) {
+        const fullUserWithRelation = await this.userRepository.findOne({
+            where: { id: user.id },
+    });
+
+    if (!fullUserWithRelation) {
+        throw new NotFoundException('User not found when creating learner profile');
+    }
+
+    learnerProfile = this.learnerProfileRepository.create({
+        user: fullUserWithRelation,
+    });
+
+    learnerProfile.hasCreatedPlacement = true;
+
+    await this.learnerProfileRepository.save(learnerProfile);
+    } else {
+    learnerProfile.hasCreatedPlacement = true;
+    await this.learnerProfileRepository.save(learnerProfile);
+    }
+    
   // 2. Tạo hoặc lấy template
   const template = await this.createPlacementTemplate();
   console.log('📋 Using template ID:', template.id);
@@ -220,6 +246,9 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   await this.testRepository.save(test);
   console.log('✅ Created new test ID:', test.id);
   console.log('🔗 Linked to template ID:', test.testTemplate?.id, '| User ID:', test.user.id);
+
+  // ✅ Kiểm tra hoặc tạo LearnerProfile
+    
 
   // 5. Lấy câu hỏi phù hợp
   const questions = await this.testTemplateService.getPlacementTestQuestions(template.id);
@@ -473,6 +502,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     test.score = correctAnswers;
     test.total_correct_answer = correctAnswers;
     test.total_incorrect_answer = test.testQuestions.length - correctAnswers;
+    test.is_submitted = true;
     await this.testRepository.save(test);
 
     let learnerProfile = await this.learnerProfileRepository.findOne({
@@ -500,6 +530,8 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     } else {
       learnerProfile.level = Level.BEGINNER;
     }
+
+    learnerProfile.hasSubmittedPlacement = true;
 
     await this.learnerProfileRepository.save(learnerProfile);
 
@@ -539,6 +571,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     .leftJoinAndSelect('test.testTemplate', 'testTemplate')
     .leftJoinAndSelect('test.testQuestions', 'testQuestions')
     .leftJoinAndSelect('testQuestions.question', 'question')
+    .leftJoinAndSelect('question.options', 'options')
     .leftJoinAndSelect('test.testMistakes', 'testMistakes')
     .where('test.user = :userId', { userId })
     .andWhere('testTemplate.type = :type', { type: 'Mixed' })

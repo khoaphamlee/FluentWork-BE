@@ -52,5 +52,9 @@ export class Test {
   
     @Column({ default: 0 })
     total_incorrect_answer: number;
+
+    @Column({ default: false })
+    is_submitted: boolean;
+
 }
   

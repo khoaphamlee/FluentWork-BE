@@ -41,4 +41,11 @@ export class LearnerProfile {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @Column({ default: false })
+    hasCreatedPlacement: boolean;
+
+    @Column({ default: false })
+    hasSubmittedPlacement: boolean;
+
 }

@@ -117,6 +117,7 @@ describe('TestsService', () => {
         total_incorrect_answer: 0,
         testQuestions: [],
         testMistakes: [],
+        is_submitted: true,
       };
 
       const questions = Array.from({ length: 20 }, (_, i) => ({
