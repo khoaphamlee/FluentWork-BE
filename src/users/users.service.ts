@@ -19,12 +19,15 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserProfileDto } from './dto/user-profile-dto';
 import { UserDto } from './dto/user-dto';
 import { UserRole } from 'src/common/enums/user-role.enum';
+import { LearnerProfile } from 'src/learner-profiles/entities/learner-profile.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(LearnerProfile)
+    private readonly learnerProfileRepository: Repository<LearnerProfile>,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -54,6 +57,16 @@ export class UsersService {
     });
 
     const savedUser = await this.usersRepository.save(user);
+    // ✅ Tạo LearnerProfile nếu là người học
+    if (savedUser.role === UserRole.Learner) {
+    const learnerProfile = this.learnerProfileRepository.create({
+        user: savedUser,
+        hasCreatedPlacement: false,
+        hasSubmittedPlacement: false,
+    });
+    await this.learnerProfileRepository.save(learnerProfile);
+    }
+
     const { password_hash, ...returnUser } = savedUser;
 
     return {
