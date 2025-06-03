@@ -21,10 +21,8 @@ export class TestQuestion {
     @JoinColumn({ name: 'test_id' })
     test: Test;
 
-    @OneToOne(() => TestAnswer, (answer) => answer.testQuestion, {
-        cascade: true,
-    })
-    answer: TestAnswer;
+    @OneToMany(() => TestAnswer, (answer) => answer.testQuestion)
+    answer: TestAnswer[];
 
     @ManyToOne(() => Question, (question) => question.testQuestion, {
         onDelete: 'CASCADE',  

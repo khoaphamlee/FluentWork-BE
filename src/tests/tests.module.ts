@@ -12,11 +12,12 @@ import { LearnerProfile } from 'src/learner-profiles/entities/learner-profile.en
 import { TestAnswer } from 'src/test-answers/entities/test-answer.entity';
 import { OptionsModule } from 'src/options/options.module';
 import { TestTopicValidator } from 'src/validator/test_topic.validator';
+import { LearningPath } from 'src/learning-paths/entities/learning-path.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Test, User, TestTemplate, TestQuestion, Question, TestAnswer, LearnerProfile]),
-    TestTemplatesModule, OptionsModule
+    TestTemplatesModule, OptionsModule, LearningPath
   ],
   controllers: [TestsController],
   providers: [TestsService, TestTopicValidator],

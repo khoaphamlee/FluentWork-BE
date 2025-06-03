@@ -16,7 +16,7 @@ import {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @OneToOne(() => TestQuestion, (question) => question.answer, { onDelete: 'CASCADE' })
+    @ManyToOne(() => TestQuestion, (question) => question.answer, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'test_question_id' })
     testQuestion: TestQuestion;
   

@@ -472,14 +472,18 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     questionId: testQuestion.question.id,
     questionText: testQuestion.question.question_text,
     options: testQuestion.question.options.map((opt) => ({
-      id: opt.id,
-      text: opt.option_text,
-      isCorrect: opt.is_correct,
+        id: opt.id,
+        text: opt.option_text,
+        isCorrect: opt.is_correct,
     })),
-    selectedOptionId: testQuestion.answer?.option?.id || null,
-    isCorrect: testQuestion.answer?.is_correct || false,
+    answers: testQuestion.answer.map((ans) => ({
+        selectedOptionId: ans.option?.id || null,
+        isCorrect: ans.option?.is_correct || false,
+        answeredAt: ans.answeredAt,
+    })),
     explanation: testQuestion.question.explanation,
-  }));
+    }));
+
 
   return {
     message: 'Test submitted successfully',
@@ -518,118 +522,109 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   return this.submitTest(currentTest.id, dto, userId);
 }
 
-
   async submitPlacementTest(
-    testId: number,
-    dto: SubmitTestDto,
-    userId: number,
-  ) {
-    const test = await this.testRepository.findOne({
-      where: { id: testId },
-      relations: ['user', 'testQuestions', 'testQuestions.question'],
-    });
+  testId: number,
+  dto: SubmitTestDto,
+  userId: number,
+) {
+  const test = await this.testRepository.findOne({
+    where: { id: testId },
+    relations: ['user', 'testQuestions', 'testQuestions.question'],
+  });
 
-    if (!test) throw new NotFoundException('Test not found');
+  if (!test) throw new NotFoundException('Test not found');
+  if (test.user.id !== userId)
+    throw new BadRequestException('User does not own this test');
 
-    if (test.user.id !== userId)
-      throw new BadRequestException('User does not own this test');
-
-    const submittedAnswers = await Promise.all(
-      dto.answers.map(async (answer) => {
-        const testQuestion = await this.testQuestionRepository.findOne({
-          where: { id: answer.testQuestionId },
+  const submittedAnswers = await Promise.all(
+    dto.answers.map(async ({ testQuestionId, selectedOptionId }) => {
+      const [testQuestion, option] = await Promise.all([
+        this.testQuestionRepository.findOne({
+          where: { id: testQuestionId },
           relations: ['question'],
-        });
+        }),
+        this.optionRepository.findOne({ where: { id: selectedOptionId } }),
+      ]);
 
-        const option = await this.optionRepository.findOne({
-          where: { id: answer.selectedOptionId },
-        });
+      return testQuestion && option
+        ? this.testAnswerRepository.save({ testQuestion, option })
+        : null;
+    }),
+  );
 
-        if (!testQuestion || !option) return null;
+  const correctAnswers = submittedAnswers.filter(
+    (a) => a?.option.is_correct,
+  ).length;
 
-        return this.testAnswerRepository.save({
-          testQuestion,
-          option,
-        });
-      }),
+  Object.assign(test, {
+    score: correctAnswers,
+    total_correct_answer: correctAnswers,
+    total_incorrect_answer: test.testQuestions.length - correctAnswers,
+    is_submitted: true,
+  });
+
+  await this.testRepository.save(test);
+
+  const user = await this.userRepository.findOne({ where: { id: userId } });
+  if (!user) throw new NotFoundException('User not found');
+
+  let learnerProfile =
+    (await this.learnerProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    })) ?? this.learnerProfileRepository.create({ user });
+
+  learnerProfile.level =
+    correctAnswers >= 9
+      ? Level.ADVANCED
+      : correctAnswers >= 7
+      ? Level.INTERMEDIATE
+      : Level.BEGINNER;
+
+  learnerProfile.hasSubmittedPlacement = true;
+  await this.learnerProfileRepository.save(learnerProfile);
+
+  const detailedTest = await this.testRepository.findOne({
+    where: { id: test.id },
+    relations: [
+      'testQuestions',
+      'testQuestions.question',
+      'testQuestions.question.options',
+      'testQuestions.answer',
+      'testQuestions.answer.option',
+    ],
+  });
+
+  if (!detailedTest) throw new NotFoundException('Test not found');
+
+  const questionsWithAnswers = detailedTest.testQuestions.map(
+    ({ question, answer }) => {
+        const latestAnswer = answer?.[answer.length - 1]; // hoặc tùy theo logic chọn answer nào
+
+        return {
+        questionId: question.id,
+        questionText: question.question_text,
+        options: question.options.map(({ id, option_text, is_correct }) => ({
+            id,
+            text: option_text,
+            isCorrect: is_correct,
+        })),
+        selectedOptionId: latestAnswer?.option?.id ?? null,
+        isCorrect: latestAnswer?.option?.is_correct ?? false,
+        explanation: question.explanation,
+        };
+    }
     );
 
-    const correctAnswers = submittedAnswers.filter(
-      (a) => a && a.option.is_correct,
-    ).length;
 
-    test.score = correctAnswers;
-    test.total_correct_answer = correctAnswers;
-    test.total_incorrect_answer = test.testQuestions.length - correctAnswers;
-    test.is_submitted = true;
-    await this.testRepository.save(test);
+  return {
+    message: 'Placement test submitted and level assigned.',
+    score: correctAnswers,
+    level: learnerProfile.level,
+    questions: questionsWithAnswers,
+  };
+}
 
-    let learnerProfile = await this.learnerProfileRepository.findOne({
-      where: {
-        user: {
-          id: userId,
-        },
-      },
-      relations: ['user'],
-    });
-
-    if (!learnerProfile) {
-        const user = await this.userRepository.findOne({ where: { id: userId } });
-        if (!user) throw new NotFoundException('User not found');
-
-        learnerProfile = this.learnerProfileRepository.create({
-            user,
-        });
-    }
-
-    if (correctAnswers >= 9) {
-      learnerProfile.level = Level.ADVANCED;
-    } else if (correctAnswers >= 7) {
-      learnerProfile.level = Level.INTERMEDIATE;
-    } else {
-      learnerProfile.level = Level.BEGINNER;
-    }
-
-    learnerProfile.hasSubmittedPlacement = true;
-
-    await this.learnerProfileRepository.save(learnerProfile);
-
-    // Sau khi lưu learnerProfile
-    const detailedTest = await this.testRepository.findOne({
-        where: { id: test.id },
-        relations: [
-            'testQuestions',
-            'testQuestions.question',
-            'testQuestions.question.options',
-            'testQuestions.answer',
-            'testQuestions.answer.option',
-        ],
-    });
-
-    if (!detailedTest) throw new NotFoundException('Test not found');
-
-    const questionsWithAnswers = detailedTest.testQuestions.map((testQuestion) => {
-    return {
-        questionId: testQuestion.question.id,
-        questionText: testQuestion.question.question_text,
-        options: testQuestion.question.options.map((opt) => ({
-            id: opt.id,
-            text: opt.option_text,
-            isCorrect: opt.is_correct,
-        })),
-        selectedOptionId: testQuestion.answer?.option?.id || null,
-        isCorrect: testQuestion.answer?.is_correct || false,
-        explanation: testQuestion.question.explanation,
-    };
-    });
-
-    return {
-      message: 'Placement test submitted and level assigned.',
-      score: correctAnswers,
-      level: learnerProfile.level,
-      questions: questionsWithAnswers,
-    };
-  }
 
   async submitCurrentPlacementTest(userId: number, dto: SubmitTestDto) {
   // Tìm bài test gần nhất dạng placement
@@ -682,13 +677,17 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
     questionText: tq.question.question_text,
     explanation: tq.question.explanation,
     options: tq.question.options.map((opt) => ({
-      id: opt.id,
-      text: opt.option_text,
-      isCorrect: opt.is_correct,
+        id: opt.id,
+        text: opt.option_text,
+        isCorrect: opt.is_correct,
     })),
-    selectedOptionId: tq.answer?.option?.id || null,
-    isCorrect: tq.answer?.is_correct || false,
-  }));
+    answers: tq.answer?.map((ans) => ({
+        selectedOptionId: ans.option?.id || null,
+        isCorrect: ans.is_correct,
+        answeredAt: ans.answeredAt,
+    })) || [], // Nếu chưa có câu trả lời nào
+    }));
+
 
   // Trả về chi tiết bài kiểm tra
   return {
@@ -740,13 +739,17 @@ async getTestForUser(userId: number) {
     questionText: tq.question.question_text,
     explanation: tq.question.explanation,
     options: tq.question.options.map((opt) => ({
-      id: opt.id,
-      text: opt.option_text,
-      isCorrect: opt.is_correct,
+        id: opt.id,
+        text: opt.option_text,
+        isCorrect: opt.is_correct,
     })),
-    selectedOptionId: tq.answer?.option?.id || null,
-    isCorrect: tq.answer?.is_correct ?? null, // Có thể null nếu chưa trả lời
-  }));
+    answers: tq.answer?.map((ans) => ({
+        selectedOptionId: ans.option?.id || null,
+        isCorrect: ans.is_correct,
+        answeredAt: ans.answeredAt,
+    })) || [], // Nếu chưa có câu trả lời nào
+    }));
+
 
   return {
     testId: test.id,

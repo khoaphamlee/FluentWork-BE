@@ -104,4 +104,5 @@ async findByUser(userId: number): Promise<LearningPath> {
     const learningPath = await this.findOne(id); 
     await this.learningPathRepository.remove(learningPath); 
   }
+
 }
