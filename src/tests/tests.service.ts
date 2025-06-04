@@ -466,7 +466,7 @@ async createPlacementTest(user: User, dto: CreatePlacementTestDto): Promise<Test
   }
 
   const totalQuestions = detailedTest.testQuestions.length;
-  const score = correctCount / totalQuestions;
+  const score = correctCount;
 
   const questionsWithAnswers = detailedTest.testQuestions.map((testQuestion) => ({
     questionId: testQuestion.question.id,

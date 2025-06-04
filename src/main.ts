@@ -10,27 +10,33 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
-    new EmptyBodyValidationPipe(), // check empty body
+    new EmptyBodyValidationPipe(),
     new ValidationPipe({
-      whitelist: true, // Chỉ cho phép các field có trong DTO
-      forbidNonWhitelisted: true, // Nếu gửi field lạ → báo lỗi
-      transform: true, // Tự động ép kiểu nếu cần
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
+
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    methods: 'GET,POST',
+    allowedHeaders: 'Content-Type,Authorization',
+  });
 
   const config = new DocumentBuilder()
     .setTitle('English Learning Website API')
     .setDescription('API documentation for English learning platform')
     .setVersion('1.0')
-    .addBearerAuth() // Nếu có JWT
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
-  app.useGlobalInterceptors(new LoggingInterceptor()); // interceptor
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   const seeder = app.get(DatabaseSeederService);
-  await seeder.seed(); // <- seed trước khi app.listen()
+  await seeder.seed();
 
   await app.listen(process.env.PORT ?? 3000);
   console.log('App running on http://localhost:3000');
